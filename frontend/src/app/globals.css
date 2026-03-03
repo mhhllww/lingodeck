@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(0, 0%, 10%);
+  --surface: hsl(0, 0%, 97%);
+  --border: hsl(0, 0%, 88%);
+  --text-primary: hsl(0, 0%, 10%);
+  --text-secondary: hsl(0, 0%, 45%);
+  --accent: hsl(252, 80%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 96%);
+  --muted-foreground: hsl(0, 0%, 45%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(0, 0%, 10%);
+  --destructive: hsl(0, 72%, 51%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(252, 80%, 60%);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(0, 0%, 7%);
+  --foreground: hsl(0, 0%, 93%);
+  --surface: hsl(0, 0%, 11%);
+  --border: hsl(0, 0%, 18%);
+  --text-primary: hsl(0, 0%, 93%);
+  --text-secondary: hsl(0, 0%, 55%);
+  --accent: hsl(252, 80%, 65%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 14%);
+  --muted-foreground: hsl(0, 0%, 55%);
+  --card: hsl(0, 0%, 11%);
+  --card-foreground: hsl(0, 0%, 93%);
+  --destructive: hsl(0, 63%, 42%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(252, 80%, 65%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-destructive: var(--destructive);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
