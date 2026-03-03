@@ -1,0 +1,597 @@
+basePath: /
+definitions:
+  domain.Card:
+    properties:
+      antonyms:
+        items:
+          type: string
+        type: array
+      back:
+        type: string
+      created_at:
+        type: string
+      deck_id:
+        type: integer
+      definitions:
+        items:
+          type: string
+        type: array
+      examples:
+        items:
+          type: string
+        type: array
+      front:
+        type: string
+      id:
+        type: integer
+      last_studied_at:
+        type: string
+      part_of_speech:
+        items:
+          type: string
+        type: array
+      synonyms:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      times_correct:
+        type: integer
+      times_incorrect:
+        type: integer
+      transcription:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.Deck:
+    properties:
+      card_count:
+        type: integer
+      color:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  domain.Translation:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      source_lang:
+        type: string
+      source_text:
+        type: string
+      target_lang:
+        type: string
+      target_text:
+        type: string
+    type: object
+  domain.Word:
+    properties:
+      created_at:
+        type: string
+      definitions:
+        items:
+          type: string
+        type: array
+      examples:
+        items:
+          type: string
+        type: array
+      id:
+        type: integer
+      part_of_speech:
+        type: string
+      transcription:
+        type: string
+      word:
+        type: string
+    type: object
+  handler.CardResponse:
+    properties:
+      antonyms:
+        items:
+          type: string
+        type: array
+      back:
+        type: string
+      created_at:
+        type: string
+      deck_id:
+        type: string
+      definitions:
+        items:
+          type: string
+        type: array
+      examples:
+        items:
+          type: string
+        type: array
+      front:
+        type: string
+      id:
+        type: string
+      last_studied_at:
+        type: string
+      part_of_speech:
+        items:
+          type: string
+        type: array
+      synonyms:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      times_correct:
+        type: integer
+      times_incorrect:
+        type: integer
+      transcription:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handler.DeckResponse:
+    properties:
+      card_count:
+        type: integer
+      color:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  handler.errorBody:
+    properties:
+      error:
+        $ref: '#/definitions/handler.errorDetail'
+    type: object
+  handler.errorDetail:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  handler.saveResultsRequest:
+    properties:
+      card_results:
+        items:
+          $ref: '#/definitions/handler.studyResultRequest'
+        type: array
+    type: object
+  handler.studyResultRequest:
+    properties:
+      card_id:
+        type: string
+      correct:
+        type: boolean
+    type: object
+  handler.translateRequest:
+    properties:
+      source_lang:
+        type: string
+      target_lang:
+        type: string
+      text:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: REST API for LingoDeck — an English learning app
+  title: LingoDeck API
+  version: "1.0"
+paths:
+  /api/cards:
+    get:
+      parameters:
+      - description: Deck ID filter
+        in: query
+        name: deck_id
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.CardResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: List all cards with optional filters
+      tags:
+      - cards
+    post:
+      parameters:
+      - description: Card data with deck_id
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Card'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Create a card (flat route, deck_id from body)
+      tags:
+      - cards
+  /api/cards/{id}:
+    delete:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Delete a card
+      tags:
+      - cards
+    get:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.CardResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Get a card by ID
+      tags:
+      - cards
+    put:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Card'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Update a card
+      tags:
+      - cards
+  /api/decks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.DeckResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: List all decks
+      tags:
+      - decks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Deck data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Deck'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.DeckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Create a new deck
+      tags:
+      - decks
+  /api/decks/{deckId}/cards:
+    get:
+      parameters:
+      - description: Deck ID
+        in: path
+        name: deckId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.CardResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: List cards in a deck
+      tags:
+      - cards
+    post:
+      parameters:
+      - description: Deck ID
+        in: path
+        name: deckId
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Card'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Add card to deck (nested route)
+      tags:
+      - cards
+  /api/decks/{id}:
+    delete:
+      parameters:
+      - description: Deck ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Delete a deck
+      tags:
+      - decks
+    get:
+      parameters:
+      - description: Deck ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.DeckResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Get deck by ID with card count
+      tags:
+      - decks
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Deck ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Deck data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Deck'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.DeckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Update a deck
+      tags:
+      - decks
+  /api/dictionary/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Word'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Search words in dictionary
+      tags:
+      - dictionary
+  /api/dictionary/words/{id}:
+    get:
+      parameters:
+      - description: Word ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Word'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Get word by ID
+      tags:
+      - dictionary
+  /api/study/results:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Study results
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.saveResultsRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Save study session results
+      tags:
+      - study
+  /api/translate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Translation request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.translateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Translation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Translate text
+      tags:
+      - translator
+  /api/translate/history:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Translation'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorBody'
+      summary: Get translation history
+      tags:
+      - translator
+swagger: "2.0"
