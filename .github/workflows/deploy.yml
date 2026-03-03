@@ -7,14 +7,18 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+          cache-dependency-path: backend/go.sum
 
-      - run: cd backend && go build -o server ./cmd/api
+      - run: go build -o server ./cmd/api
 
       - name: Stop service
         uses: appleboy/ssh-action@v1.0.3
