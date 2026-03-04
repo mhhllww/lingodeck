@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -32,6 +33,7 @@ func (h *DictionaryHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	words, err := h.svc.Search(r.Context(), q)
 	if err != nil {
+		slog.Error("failed to search words", "query", q, "error", err)
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to search words")
 		return
 	}
