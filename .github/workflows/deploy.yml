@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -20,7 +20,7 @@ jobs:
 
       - run: go build -o server ./cmd/api
 
-      - name: Stop service
+      - name: Stop backend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -28,7 +28,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: sudo systemctl stop lingodeck
 
-      - name: Deploy files
+      - name: Deploy backend
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -48,3 +48,51 @@ jobs:
             cp -r /home/deploy/backend/migrations /home/deploy/migrations
             rm -rf /home/deploy/backend
             sudo systemctl start lingodeck
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Stop frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: deploy
+          key: ${{ secrets.SSH_KEY }}
+          script: sudo systemctl stop lingodeck-front || true
+
+      - name: Clean old frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: deploy
+          key: ${{ secrets.SSH_KEY }}
+          script: rm -rf /var/www/lingodeck/frontend/.next
+
+      - name: Deploy frontend
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: deploy
+          key: ${{ secrets.SSH_KEY }}
+          source: "frontend/.next"
+          target: "/var/www/lingodeck"
+
+      - name: Start frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: deploy
+          key: ${{ secrets.SSH_KEY }}
+          script: sudo systemctl start lingodeck-front
