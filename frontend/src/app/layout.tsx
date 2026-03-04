@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 import { MSWInit } from './msw-init';
+import { BackendInit } from './backend-init';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className="antialiased">
         <Providers>
           <MSWInit />
+          <BackendInit />
           <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex flex-1 min-h-0">

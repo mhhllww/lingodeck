@@ -5,7 +5,7 @@ import { BookmarkPlus, BookmarkCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { DeckTagSelector } from './DeckTagSelector';
-import { useCardStore } from '@/store/useCardStore';
+import { useCardStore, createCardOnBackend } from '@/store/useCardStore';
 import { useToast } from '@/components/ui/toast';
 import type { VocabularyCard } from '@/types/card';
 
@@ -16,7 +16,7 @@ interface SaveCardButtonProps {
 }
 
 export function SaveCardButton({ cardData, suggestedTags, onSaved }: SaveCardButtonProps) {
-  const { cards, addCard, deleteCard, setLastUsedDeckId, decks } = useCardStore();
+  const { cards, deleteCard, setLastUsedDeckId, decks } = useCardStore();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
@@ -25,10 +25,10 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved }: SaveCardBut
   );
   const isSaved = !!savedCard;
 
-  const handleSave = ({ deckId, tags }: { deckId: string | null; tags: string[] }) => {
+  const handleSave = async ({ deckId, tags }: { deckId: string | null; tags: string[] }) => {
     setOpen(false);
 
-    const card = addCard({
+    const card = await createCardOnBackend({
       ...cardData,
       deckId: deckId ?? undefined,
       tags,

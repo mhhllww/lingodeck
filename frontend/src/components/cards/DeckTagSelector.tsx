@@ -5,7 +5,7 @@ import { Check, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useCardStore, DECK_COLORS } from '@/store/useCardStore';
+import { useCardStore, DECK_COLORS, createDeckOnBackend } from '@/store/useCardStore';
 import { cn } from '@/lib/utils';
 import type { Deck } from '@/types/card';
 
@@ -16,7 +16,7 @@ interface DeckTagSelectorProps {
 }
 
 export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelectorProps) {
-  const { decks, lastUsedDeckId, addDeck } = useCardStore();
+  const { decks, lastUsedDeckId } = useCardStore();
 
   const [inputValue, setInputValue] = useState('');
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(lastUsedDeckId);
@@ -58,11 +58,12 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
     inputRef.current?.focus();
   };
 
-  const handleCreateDeck = () => {
+  const handleCreateDeck = async () => {
+    console.log('create deck');
     const name = inputValue.trim();
     if (!name) return;
     const color = DECK_COLORS[decks.length % DECK_COLORS.length];
-    const deck = addDeck({ name, tags: [], color });
+    const deck = await createDeckOnBackend({ name, tags: [], color });
     handleSelectDeck(deck);
   };
 
@@ -213,7 +214,7 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
 
       {/* Footer actions */}
       <div className="px-4 py-3 border-t border-[var(--border)] flex flex-col gap-2">
-        <Button size="sm" className="w-full" onClick={handleSave}>
+        <Button size="sm" className="w-full" onClick={handleSave} disabled={!selectedDeckId}>
           {selectedDeck ? `Save to "${selectedDeck.name}"` : 'Save to Cards'}
         </Button>
         <button

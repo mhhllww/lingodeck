@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { VocabularyCard, Deck, CardFilters } from '@/types/card';
 import { generateId } from '@/lib/utils';
+import {
+  apiGetDecks,
+  apiGetDeckCards,
+  apiCreateDeck,
+  apiUpdateDeck,
+  apiDeleteDeck,
+  apiCreateCard,
+  apiUpdateCard,
+  apiDeleteCard,
+} from '@/lib/api/backend';
+
+const MOCK = process.env.NEXT_PUBLIC_ENABLE_MOCK === 'true';
 
 export const DECK_COLORS = [
   '#6366f1',
@@ -81,12 +93,16 @@ export const useCardStore = create<CardStore>()(
         set((state) => ({ cards: [card, ...state.cards] }));
         return card;
       },
-      updateCard: (id, data) =>
+      updateCard: (id, data) => {
         set((state) => ({
           cards: state.cards.map((c) => (c.id === id ? { ...c, ...data } : c)),
-        })),
-      deleteCard: (id) =>
-        set((state) => ({ cards: state.cards.filter((c) => c.id !== id) })),
+        }));
+        if (!MOCK) apiUpdateCard(id, data).catch(console.error);
+      },
+      deleteCard: (id) => {
+        set((state) => ({ cards: state.cards.filter((c) => c.id !== id) }));
+        if (!MOCK) apiDeleteCard(id).catch(console.error);
+      },
       setFilters: (filters) =>
         set((state) => ({ filters: { ...state.filters, ...filters } })),
       getFilteredCards: () => {
@@ -151,17 +167,21 @@ export const useCardStore = create<CardStore>()(
         set((state) => ({ decks: [deck, ...state.decks] }));
         return deck;
       },
-      updateDeck: (id, data) =>
+      updateDeck: (id, data) => {
         set((state) => ({
           decks: state.decks.map((d) => (d.id === id ? { ...d, ...data } : d)),
-        })),
-      deleteDeck: (id) =>
+        }));
+        if (!MOCK && data.name) apiUpdateDeck(id, data.name).catch(console.error);
+      },
+      deleteDeck: (id) => {
         set((state) => ({
           decks: state.decks.filter((d) => d.id !== id),
           cards: state.cards.map((c) =>
             c.deckId === id ? { ...c, deckId: undefined } : c
           ),
-        })),
+        }));
+        if (!MOCK) apiDeleteDeck(id).catch(console.error);
+      },
       setLastUsedDeckId: (id) => set({ lastUsedDeckId: id }),
     }),
     {
@@ -180,3 +200,65 @@ export const useCardStore = create<CardStore>()(
     }
   )
 );
+
+// ── Standalone async helpers (outside Zustand persist) ────
+
+/**
+ * Create deck on backend, then update store with real ID.
+ * Returns the deck with the real backend ID.
+ */
+export async function createDeckOnBackend(
+  data: Omit<Deck, 'id' | 'createdAt'>
+): Promise<Deck> {
+  // Optimistic: add to store immediately with temp ID
+  const temp = useCardStore.getState().addDeck(data);
+
+  if (MOCK) return temp;
+
+  try {
+    console.log('try to create deck')
+    const real = await apiCreateDeck(data.name);
+    const finalDeck: Deck = { ...real, color: data.color, tags: data.tags };
+    useCardStore.setState((state) => ({
+      decks: state.decks.map((d) => (d.id === temp.id ? finalDeck : d)),
+    }));
+    return finalDeck;
+  } catch (e) {
+    console.error('Failed to create deck:', e);
+    return temp;
+  }
+}
+
+/**
+ * Create card on backend, then update store with real ID.
+ */
+export async function createCardOnBackend(
+  data: Omit<VocabularyCard, 'id' | 'createdAt'>
+): Promise<VocabularyCard> {
+  const temp = useCardStore.getState().addCard(data);
+
+  if (MOCK || !data.deckId) return temp;
+
+  try {
+    const real = await apiCreateCard(data.deckId, data);
+    useCardStore.setState((state) => ({
+      cards: state.cards.map((c) => (c.id === temp.id ? real : c)),
+    }));
+    return real;
+  } catch (e) {
+    console.error('Failed to create card:', e);
+    return temp;
+  }
+}
+
+/**
+ * Load all decks and cards from the real backend into the store.
+ */
+export async function loadFromBackend(): Promise<void> {
+  const decks = await apiGetDecks();
+  const cardArrays = await Promise.all(
+    decks.map((d) => apiGetDeckCards(d.id))
+  );
+  const cards = cardArrays.flat();
+  useCardStore.setState({ decks, cards });
+}
