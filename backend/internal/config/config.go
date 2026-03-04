@@ -10,6 +10,7 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 	DeepLAPIKey string
+	GroqAPIKey  string
 }
 
 func Load() *Config {
@@ -24,5 +25,6 @@ func Load() *Config {
 		Port:        port,
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		DeepLAPIKey: os.Getenv("DEEPL_API_KEY"),
+		GroqAPIKey:  os.Getenv("GROQ_API_KEY"),
 	}
 }

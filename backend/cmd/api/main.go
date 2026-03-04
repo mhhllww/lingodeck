@@ -65,7 +65,8 @@ func main() {
 	deckRepo := postgres.NewDeckRepo(pool)
 
 	// Services
-	dictSvc := service.NewDictionaryService(wordRepo)
+	groqSvc := service.NewGroqService(cfg.GroqAPIKey)
+	dictSvc := service.NewDictionaryService(wordRepo, groqSvc)
 	transSvc := service.NewTranslatorService(translationRepo, cfg.DeepLAPIKey)
 	cardSvc := service.NewCardService(cardRepo, deckRepo)
 
