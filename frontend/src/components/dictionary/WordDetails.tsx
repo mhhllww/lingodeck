@@ -4,12 +4,13 @@ import { Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PartOfSpeech } from './PartOfSpeech';
+import { SynonymsBlock } from './SynonymsBlock';
 import { useSpeech } from '@/hooks/useSpeech';
-import type { DictionaryEntry } from '@/types/dictionary';
+import { MAX_DEFINITIONS, MAX_EXAMPLES, MAX_SYNONYMS } from '@/lib/constants';
+import type { WordResponse } from '@/types/dictionary';
 
 interface WordDetailsProps {
-  entry: DictionaryEntry;
+  entry: WordResponse;
   onWordClick?: (word: string) => void;
   isLoading?: boolean;
 }
@@ -32,17 +33,9 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
 
   if (isLoading) return <WordDetailsSkeleton />;
 
-  const audioUrl = entry.phonetics.find((p) => p.audio)?.audio;
-  const phonetic = entry.phonetic ?? entry.phonetics.find((p) => p.text)?.text;
-
-  const handleAudio = () => {
-    if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audio.play().catch(() => speak(entry.word));
-    } else {
-      speak(entry.word);
-    }
-  };
+  const definitions = entry.definitions.slice(0, MAX_DEFINITIONS);
+  const examples = entry.examples.slice(0, MAX_EXAMPLES);
+  const synonyms = entry.synonyms.slice(0, MAX_SYNONYMS);
 
   return (
     <motion.div
@@ -52,34 +45,54 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
     >
       <div className="flex items-center gap-3 flex-wrap">
         <h2 className="text-2xl font-bold text-[var(--foreground)]">{entry.word}</h2>
-        {phonetic && (
+        {entry.transcription && (
           <span className="text-sm text-[var(--muted-foreground)] font-mono">
-            {phonetic}
+            {entry.transcription}
           </span>
         )}
         {isSupported && (
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={handleAudio}
+            onClick={() => speak(entry.word)}
             disabled={isSpeaking}
             aria-label={`Pronounce ${entry.word}`}
           >
             <Volume2 className={`h-4 w-4 ${isSpeaking ? 'text-[var(--accent)]' : ''}`} />
           </Button>
         )}
+        {entry.part_of_speech && (
+          <span className="text-sm font-semibold text-[var(--accent)] italic">
+            {entry.part_of_speech}
+          </span>
+        )}
       </div>
 
-      <div className="space-y-3">
-        {entry.meanings.map((meaning, idx) => (
-          <PartOfSpeech
-            key={`${meaning.partOfSpeech}-${idx}`}
-            meaning={meaning}
-            onWordClick={onWordClick}
-            defaultOpen={idx === 0}
-          />
-        ))}
-      </div>
+      {definitions.length > 0 && (
+        <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+          <div className="px-4 py-3 space-y-3">
+            {definitions.map((def, idx) => (
+              <div key={idx} className="space-y-1">
+                <p className="text-sm text-[var(--foreground)]">
+                  <span className="text-[var(--muted-foreground)] mr-2 text-xs font-medium">
+                    {idx + 1}.
+                  </span>
+                  {def}
+                </p>
+                {examples[idx] && (
+                  <p className="text-sm italic text-[var(--muted-foreground)] pl-5 border-l-2 border-[var(--border)]">
+                    "{examples[idx]}"
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {synonyms.length > 0 && (
+        <SynonymsBlock synonyms={synonyms} onWordClick={onWordClick} />
+      )}
     </motion.div>
   );
 }

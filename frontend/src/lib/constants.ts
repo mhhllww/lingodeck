@@ -15,6 +15,5 @@ export const QUERY_STALE_TIMES = {
 };
 
 export const MAX_SYNONYMS = 5;
-export const MAX_ANTONYMS = 5;
 export const MAX_DEFINITIONS = 3;
 export const MAX_EXAMPLES = 2;
