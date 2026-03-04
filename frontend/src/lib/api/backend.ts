@@ -13,7 +13,6 @@ interface BackendCard {
   definitions?: string[];
   examples?: string[];
   synonyms?: string[];
-  antonyms?: string[];
   tags?: string[];
   times_correct?: number;
   times_incorrect?: number;
@@ -52,7 +51,6 @@ export function mapCard(c: BackendCard): VocabularyCard {
     definitions: c.definitions,
     examples: c.examples ?? (c.example ? [c.example] : undefined),
     synonyms: c.synonyms,
-    antonyms: c.antonyms,
     tags: c.tags ?? [],
     timesCorrect: c.times_correct ?? 0,
     timesIncorrect: c.times_incorrect ?? 0,

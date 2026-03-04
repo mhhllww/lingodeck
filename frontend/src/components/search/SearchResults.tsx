@@ -10,8 +10,7 @@ import { SaveCardButton } from '@/components/cards/SaveCardButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDictionary } from '@/hooks/useDictionary';
 import { detectLanguage } from '@/lib/utils';
-import { MAX_DEFINITIONS, MAX_EXAMPLES, MAX_SYNONYMS, MAX_ANTONYMS } from '@/lib/constants';
-import type { DictionaryEntry } from '@/types/dictionary';
+import type { WordResponse } from '@/types/dictionary';
 
 interface SearchResultsProps {
   query: string;
@@ -20,55 +19,26 @@ interface SearchResultsProps {
 }
 
 function buildCardData(
-  entry: DictionaryEntry,
+  word: WordResponse,
   translation: string,
   sourceWord: string,
   isSourceRussian: boolean
 ) {
   const englishWord = isSourceRussian ? translation : sourceWord;
   const russianTranslation = isSourceRussian ? sourceWord : translation;
-
-  const phonetic = entry.phonetic ?? entry.phonetics.find((p) => p.text)?.text;
-  const partsOfSpeech = [...new Set(entry.meanings.map((m) => m.partOfSpeech))];
-
-  const definitions = entry.meanings
-    .flatMap((m) => m.definitions.map((d) => d.definition))
-    .slice(0, MAX_DEFINITIONS);
-
-  const examples = entry.meanings
-    .flatMap((m) => m.definitions.filter((d) => d.example).map((d) => d.example as string))
-    .slice(0, MAX_EXAMPLES);
-
-  const synonyms = [
-    ...new Set(
-      entry.meanings.flatMap((m) => [
-        ...m.synonyms,
-        ...m.definitions.flatMap((d) => d.synonyms),
-      ])
-    ),
-  ].slice(0, MAX_SYNONYMS);
-
-  const antonyms = [
-    ...new Set(
-      entry.meanings.flatMap((m) => [
-        ...m.antonyms,
-        ...m.definitions.flatMap((d) => d.antonyms),
-      ])
-    ),
-  ].slice(0, MAX_ANTONYMS);
+  const partOfSpeech = word.part_of_speech ? [word.part_of_speech] : [];
 
   return {
     cardData: {
       word: englishWord,
       translation: russianTranslation,
-      transcription: phonetic,
-      partOfSpeech: partsOfSpeech,
-      definitions,
-      examples,
-      synonyms,
-      antonyms,
+      transcription: word.transcription || undefined,
+      partOfSpeech,
+      definitions: word.definitions,
+      examples: word.examples,
+      synonyms: word.synonyms,
     },
-    suggestedTags: partsOfSpeech,
+    suggestedTags: partOfSpeech,
   };
 }
 

@@ -1,9 +1,7 @@
-import type { DictionaryResponse } from '@/types/dictionary';
+import type { WordResponse } from '@/types/dictionary';
 
-const DICT_BASE = 'https://api.dictionaryapi.dev/api/v2/entries/en';
-
-export async function fetchWordDefinition(word: string): Promise<DictionaryResponse> {
-  const response = await fetch(`${DICT_BASE}/${encodeURIComponent(word)}`);
+export async function fetchWordDefinition(word: string): Promise<WordResponse[]> {
+  const response = await fetch(`/api/dictionary/search?q=${encodeURIComponent(word)}`);
 
   if (response.status === 404) {
     return [];

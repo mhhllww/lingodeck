@@ -7,7 +7,6 @@ export interface VocabularyCard {
   definitions?: string[];
   examples?: string[];
   synonyms?: string[];
-  antonyms?: string[];
   createdAt: string;
   tags?: string[];
   deckId?: string;
