@@ -31,6 +31,9 @@ type translateRequest struct {
 // @Param body body translateRequest true "Translation request"
 // @Success 200 {object} domain.Translation
 // @Failure 400 {object} errorBody
+// @Failure 429 {object} errorBody
+// @Failure 502 {object} errorBody
+// @Failure 503 {object} errorBody
 // @Failure 500 {object} errorBody
 // @Router /api/translate [post]
 func (h *TranslatorHandler) Translate(w http.ResponseWriter, r *http.Request) {
