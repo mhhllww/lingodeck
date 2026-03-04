@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useCardStore, DECK_COLORS } from '@/store/useCardStore';
+import { useCardStore, DECK_COLORS, createDeckOnBackend } from '@/store/useCardStore';
 import { formatDate } from '@/lib/utils';
 import type { Deck } from '@/types/card';
 
@@ -90,7 +90,7 @@ function DeckCard({
 }
 
 function NewDeckCard({ onCreated }: { onCreated: () => void }) {
-  const { addDeck, decks } = useCardStore();
+  const { decks } = useCardStore();
   const [active, setActive] = useState(false);
   const [name, setName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,11 +99,11 @@ function NewDeckCard({ onCreated }: { onCreated: () => void }) {
     if (active) inputRef.current?.focus();
   }, [active]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     const color = DECK_COLORS[decks.length % DECK_COLORS.length];
-    addDeck({ name: trimmed, tags: [], color });
+    await createDeckOnBackend({ name: trimmed, tags: [], color });
     setName('');
     setActive(false);
     onCreated();
