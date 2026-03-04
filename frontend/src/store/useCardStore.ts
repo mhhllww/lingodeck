@@ -97,11 +97,11 @@ export const useCardStore = create<CardStore>()(
         set((state) => ({
           cards: state.cards.map((c) => (c.id === id ? { ...c, ...data } : c)),
         }));
-        if (!MOCK) apiUpdateCard(id, data).catch(console.error);
+        if (!MOCK && /^\d+$/.test(id)) apiUpdateCard(id, data).catch(console.error);
       },
       deleteCard: (id) => {
         set((state) => ({ cards: state.cards.filter((c) => c.id !== id) }));
-        if (!MOCK) apiDeleteCard(id).catch(console.error);
+        if (!MOCK && /^\d+$/.test(id)) apiDeleteCard(id).catch(console.error);
       },
       setFilters: (filters) =>
         set((state) => ({ filters: { ...state.filters, ...filters } })),
