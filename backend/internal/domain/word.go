@@ -12,6 +12,7 @@ type Word struct {
 	PartOfSpeech  string    `json:"part_of_speech"`
 	Definitions   []string  `json:"definitions"`
 	Examples      []string  `json:"examples"`
+	Synonyms      []string  `json:"synonyms"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 

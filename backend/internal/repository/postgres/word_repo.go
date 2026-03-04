@@ -18,7 +18,7 @@ func NewWordRepo(db *pgxpool.Pool) *WordRepo {
 
 func (r *WordRepo) Search(ctx context.Context, query string) ([]domain.Word, error) {
 	rows, err := r.db.Query(ctx,
-		`SELECT id, word, transcription, part_of_speech, definitions, examples, created_at
+		`SELECT id, word, transcription, part_of_speech, definitions, examples, synonyms, created_at
 		 FROM words WHERE word ILIKE $1 ORDER BY word LIMIT 20`, "%"+query+"%")
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func (r *WordRepo) Search(ctx context.Context, query string) ([]domain.Word, err
 	var words []domain.Word
 	for rows.Next() {
 		var w domain.Word
-		if err := rows.Scan(&w.ID, &w.Word, &w.Transcription, &w.PartOfSpeech, &w.Definitions, &w.Examples, &w.CreatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.Word, &w.Transcription, &w.PartOfSpeech, &w.Definitions, &w.Examples, &w.Synonyms, &w.CreatedAt); err != nil {
 			return nil, err
 		}
 		words = append(words, w)
@@ -39,9 +39,9 @@ func (r *WordRepo) Search(ctx context.Context, query string) ([]domain.Word, err
 func (r *WordRepo) GetByID(ctx context.Context, id int) (*domain.Word, error) {
 	var w domain.Word
 	err := r.db.QueryRow(ctx,
-		`SELECT id, word, transcription, part_of_speech, definitions, examples, created_at
+		`SELECT id, word, transcription, part_of_speech, definitions, examples, synonyms, created_at
 		 FROM words WHERE id = $1`, id).
-		Scan(&w.ID, &w.Word, &w.Transcription, &w.PartOfSpeech, &w.Definitions, &w.Examples, &w.CreatedAt)
+		Scan(&w.ID, &w.Word, &w.Transcription, &w.PartOfSpeech, &w.Definitions, &w.Examples, &w.Synonyms, &w.CreatedAt)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
@@ -53,8 +53,8 @@ func (r *WordRepo) GetByID(ctx context.Context, id int) (*domain.Word, error) {
 
 func (r *WordRepo) Create(ctx context.Context, w *domain.Word) error {
 	return r.db.QueryRow(ctx,
-		`INSERT INTO words (word, transcription, part_of_speech, definitions, examples)
-		 VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`,
-		w.Word, w.Transcription, w.PartOfSpeech, w.Definitions, w.Examples).
+		`INSERT INTO words (word, transcription, part_of_speech, definitions, examples, synonyms)
+		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`,
+		w.Word, w.Transcription, w.PartOfSpeech, w.Definitions, w.Examples, w.Synonyms).
 		Scan(&w.ID, &w.CreatedAt)
 }
