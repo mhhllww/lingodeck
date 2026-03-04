@@ -66,7 +66,7 @@ func main() {
 
 	// Services
 	dictSvc := service.NewDictionaryService(wordRepo)
-	transSvc := service.NewTranslatorService(translationRepo)
+	transSvc := service.NewTranslatorService(translationRepo, cfg.DeepLAPIKey)
 	cardSvc := service.NewCardService(cardRepo, deckRepo)
 
 	// Server

@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/mhlw/lingodeck/internal/service"
@@ -29,6 +31,9 @@ type translateRequest struct {
 // @Param body body translateRequest true "Translation request"
 // @Success 200 {object} domain.Translation
 // @Failure 400 {object} errorBody
+// @Failure 429 {object} errorBody
+// @Failure 502 {object} errorBody
+// @Failure 503 {object} errorBody
 // @Failure 500 {object} errorBody
 // @Router /api/translate [post]
 func (h *TranslatorHandler) Translate(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +49,19 @@ func (h *TranslatorHandler) Translate(w http.ResponseWriter, r *http.Request) {
 
 	t, err := h.svc.Translate(r.Context(), req.Text, req.SourceLang, req.TargetLang)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to translate")
+		switch {
+		case errors.Is(err, service.ErrDeepLUnauthorized):
+			respondError(w, http.StatusBadGateway, "TRANSLATION_ERROR", "translation service authentication failed")
+		case errors.Is(err, service.ErrDeepLRateLimit):
+			respondError(w, http.StatusTooManyRequests, "RATE_LIMIT", "translation rate limit exceeded, try again later")
+		case errors.Is(err, service.ErrDeepLQuotaExceeded):
+			respondError(w, http.StatusServiceUnavailable, "QUOTA_EXCEEDED", "translation quota exceeded")
+		case errors.Is(err, service.ErrDeepLUnavailable):
+			respondError(w, http.StatusBadGateway, "SERVICE_UNAVAILABLE", "translation service temporarily unavailable")
+		default:
+			slog.Error("translation failed", "error", err)
+			respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to translate")
+		}
 		return
 	}
 
