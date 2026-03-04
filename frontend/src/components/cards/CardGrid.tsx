@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, FolderInput } from 'lucide-react';
 import { FlipCard } from './FlipCard';
 import { CardFilters } from './CardFilters';
 import { CreateCardModal } from './CreateCardModal';
+import { AssignDeckModal } from './AssignDeckModal';
+import { AddCardsToDeckModal } from './AddCardsToDeckModal';
 import { Button } from '@/components/ui/button';
 import { useCards } from '@/hooks/useCards';
 import { useToast } from '@/components/ui/toast';
@@ -19,10 +21,12 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
   const { cards: filteredCards, allCards: allStoreCards, filters, deleteCard, setFilters } = useCards();
   const cards = deckId ? filteredCards.filter((c) => c.deckId === deckId) : filteredCards;
   const allCards = deckId ? allStoreCards.filter((c) => c.deckId === deckId) : allStoreCards;
-  const { toast } = useToast();
+const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editCard, setEditCard] = useState<VocabularyCard | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [assignCard, setAssignCard] = useState<VocabularyCard | null>(null);
+  const [addToDeckOpen, setAddToDeckOpen] = useState(false);
 
   const allTags = [
     ...new Set(allCards.flatMap((c) => c.tags ?? [])),
@@ -57,10 +61,18 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
             {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)} className="gap-2 shrink-0">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">New Card</span>
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          {deckId && (
+            <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2">
+              <FolderInput className="h-4 w-4" />
+              <span className="hidden sm:inline">Add existing</span>
+            </Button>
+          )}
+          <Button onClick={() => setModalOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">New Card</span>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -88,6 +100,7 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
                   card={card}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
+                  onAssignDeck={setAssignCard}
                 />
               </motion.div>
             ))}
@@ -102,9 +115,16 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
               Search for a word on the Explore page and save it, or create a card manually.
             </p>
           </div>
-          <Button onClick={() => setModalOpen(true)} variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" /> Create your first card
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setModalOpen(true)} variant="outline" className="gap-2">
+              <Plus className="h-4 w-4" /> Create your first card
+            </Button>
+            {deckId && (
+              <Button onClick={() => setAddToDeckOpen(true)} variant="outline" className="gap-2">
+                <FolderInput className="h-4 w-4" /> Add existing
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="py-12 text-center text-sm text-[var(--muted-foreground)]">
@@ -116,7 +136,20 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
         open={modalOpen}
         onOpenChange={handleModalClose}
         editCard={editCard}
+        deckId={deckId}
       />
+      <AssignDeckModal
+        card={assignCard}
+        open={!!assignCard}
+        onOpenChange={(open) => { if (!open) setAssignCard(null); }}
+      />
+      {deckId && (
+        <AddCardsToDeckModal
+          deckId={deckId}
+          open={addToDeckOpen}
+          onOpenChange={setAddToDeckOpen}
+        />
+      )}
     </div>
   );
 }

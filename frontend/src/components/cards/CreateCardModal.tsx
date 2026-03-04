@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCards } from '@/hooks/useCards';
 import { useToast } from '@/components/ui/toast';
+import { createCardOnBackend } from '@/store/useCardStore';
 import type { VocabularyCard } from '@/types/card';
 
 interface CreateCardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editCard?: VocabularyCard;
+  deckId?: string;
 }
 
 const EMPTY_FORM = {
@@ -23,25 +25,63 @@ const EMPTY_FORM = {
   tags: '',
 };
 
-export function CreateCardModal({ open, onOpenChange, editCard }: CreateCardModalProps) {
-  const { addCard, updateCard } = useCards();
+export function CreateCardModal({ open, onOpenChange, editCard, deckId }: CreateCardModalProps) {
+  const { updateCard } = useCards();
   const { toast } = useToast();
   const isEdit = !!editCard;
 
-  const [form, setForm] = useState(
-    editCard
-      ? {
-          word: editCard.word,
-          translation: editCard.translation,
-          transcription: editCard.transcription ?? '',
-          tags: editCard.tags?.join(', ') ?? '',
-        }
-      : EMPTY_FORM
-  );
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState<Partial<typeof EMPTY_FORM>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (editCard) {
+      setForm({
+        word: editCard.word,
+        translation: editCard.translation,
+        transcription: editCard.transcription ?? '',
+        tags: editCard.tags?.join(', ') ?? '',
+      });
+    } else {
+      setForm(EMPTY_FORM);
+    }
+    setErrors({});
+    setSubmitted(false);
+  }, [editCard, open]);
+
+  const validate = (f: typeof EMPTY_FORM) => {
+    const e: Partial<typeof EMPTY_FORM> = {};
+
+    if (!f.word.trim()) {
+      e.word = 'Word is required';
+    } else if (!/^[a-zA-Z\s\-'.]+$/.test(f.word.trim())) {
+      e.word = 'Word must be in English (Latin characters only)';
+    }
+
+    if (!f.translation.trim()) {
+      e.translation = 'Translation is required';
+    } else if (!/[\u0400-\u04FF]/.test(f.translation.trim())) {
+      e.translation = 'Translation must be in Russian';
+    }
+
+    if (f.transcription.trim() && !/^[\x20-\x7Ea-zA-Z\u00C0-\u024F\u0250-\u02FF\u1D00-\u1DBF\/\[\]ˈˌːˑ.\-\s]+$/.test(f.transcription.trim())) {
+      e.transcription = 'Invalid transcription characters';
+    }
+
+    return e;
+  };
+
+  const handleChange = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = { ...form, [key]: e.target.value };
+    setForm(next);
+    if (submitted) setErrors(validate(next));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.word.trim() || !form.translation.trim()) return;
+    setSubmitted(true);
+    const errs = validate(form);
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     const tags = form.tags
       .split(',')
@@ -57,21 +97,21 @@ export function CreateCardModal({ open, onOpenChange, editCard }: CreateCardModa
       });
       toast({ title: 'Card updated', variant: 'success' });
     } else {
-      addCard({
+      createCardOnBackend({
         word: form.word.trim(),
         translation: form.translation.trim(),
         transcription: form.transcription.trim() || undefined,
         tags,
+        deckId,
       });
       toast({ title: 'Card created', variant: 'success' });
     }
 
     onOpenChange(false);
     setForm(EMPTY_FORM);
+    setErrors({});
+    setSubmitted(false);
   };
-
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [key]: e.target.value }));
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -106,49 +146,53 @@ export function CreateCardModal({ open, onOpenChange, editCard }: CreateCardModa
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Word (English) <span className="text-[var(--destructive)]">*</span>
                     </label>
                     <Input
                       value={form.word}
-                      onChange={set('word')}
+                      onChange={handleChange('word')}
                       placeholder="e.g. ephemeral"
-                      required
                       autoFocus
+                      className={errors.word ? 'border-[var(--destructive)]' : ''}
                     />
+                    {errors.word && <p className="text-xs text-[var(--destructive)]">{errors.word}</p>}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Translation <span className="text-[var(--destructive)]">*</span>
                     </label>
                     <Input
                       value={form.translation}
-                      onChange={set('translation')}
+                      onChange={handleChange('translation')}
                       placeholder="e.g. кратковременный"
-                      required
+                      className={errors.translation ? 'border-[var(--destructive)]' : ''}
                     />
+                    {errors.translation && <p className="text-xs text-[var(--destructive)]">{errors.translation}</p>}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Transcription
                     </label>
                     <Input
                       value={form.transcription}
-                      onChange={set('transcription')}
+                      onChange={handleChange('transcription')}
                       placeholder="e.g. /ɪˈfem.ər.əl/"
+                      className={errors.transcription ? 'border-[var(--destructive)]' : ''}
                     />
+                    {errors.transcription && <p className="text-xs text-[var(--destructive)]">{errors.transcription}</p>}
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Tags
                     </label>
                     <Input
                       value={form.tags}
-                      onChange={set('tags')}
+                      onChange={handleChange('tags')}
                       placeholder="adjective, advanced (comma-separated)"
                     />
                   </div>

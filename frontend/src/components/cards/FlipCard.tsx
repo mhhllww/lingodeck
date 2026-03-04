@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Volume2, Trash2, Edit2 } from 'lucide-react';
+import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSpeech } from '@/hooks/useSpeech';
@@ -12,11 +12,13 @@ interface FlipCardProps {
   card: VocabularyCard;
   onDelete: (id: string) => void;
   onEdit: (card: VocabularyCard) => void;
+  onAssignDeck?: (card: VocabularyCard) => void;
 }
 
-export function FlipCard({ card, onDelete, onEdit }: FlipCardProps) {
+export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { speak, isSpeaking, isSupported } = useSpeech();
 
   const handleFlip = (e: React.MouseEvent) => {
@@ -35,10 +37,21 @@ export function FlipCard({ card, onDelete, onEdit }: FlipCardProps) {
       {/* Controls overlay */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: showControls ? 1 : 0 }}
+        animate={{ opacity: showControls && !isAnimating ? 1 : 0 }}
         className="absolute top-2 right-2 z-20 flex gap-1"
         data-no-flip="true"
       >
+        {onAssignDeck && (
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            onClick={(e) => { e.stopPropagation(); onAssignDeck(card); }}
+            aria-label="Move to deck"
+            data-no-flip="true"
+          >
+            <Layers className="h-3 w-3" />
+          </Button>
+        )}
         <Button
           variant="secondary"
           size="icon-sm"
@@ -65,6 +78,8 @@ export function FlipCard({ card, onDelete, onEdit }: FlipCardProps) {
         style={{ transformStyle: 'preserve-3d' }}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.4, ease: 'easeInOut' }}
+        onAnimationStart={() => setIsAnimating(true)}
+        onAnimationComplete={() => setIsAnimating(false)}
         onClick={handleFlip}
         role="button"
         tabIndex={0}
@@ -79,7 +94,7 @@ export function FlipCard({ card, onDelete, onEdit }: FlipCardProps) {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold text-[var(--foreground)]">{card.word}</span>
-              {isSupported && (
+              {isSupported && card.transcription && (
                 <button
                   data-no-flip="true"
                   onClick={(e) => { e.stopPropagation(); speak(card.word); }}

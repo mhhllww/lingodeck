@@ -138,6 +138,7 @@ export async function apiUpdateCard(
   const body: Record<string, unknown> = {};
   if (data.word !== undefined) body.front = data.word;
   if (data.translation !== undefined) body.back = data.translation;
+  if (data.deckId !== undefined) body.deck_id = Number(data.deckId);
   if (data.timesCorrect !== undefined) body.times_correct = data.timesCorrect;
   if (data.timesIncorrect !== undefined) body.times_incorrect = data.timesIncorrect;
   if (data.lastStudiedAt !== undefined) body.last_studied_at = data.lastStudiedAt;
