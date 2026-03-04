@@ -16,5 +16,6 @@ type Translation struct {
 
 type TranslationRepository interface {
 	Create(ctx context.Context, t *Translation) error
+	FindByText(ctx context.Context, sourceText, sourceLang, targetLang string) (*Translation, error)
 	GetHistory(ctx context.Context, limit int) ([]Translation, error)
 }

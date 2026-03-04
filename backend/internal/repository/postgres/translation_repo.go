@@ -15,6 +15,21 @@ func NewTranslationRepo(db *pgxpool.Pool) *TranslationRepo {
 	return &TranslationRepo{db: db}
 }
 
+func (r *TranslationRepo) FindByText(ctx context.Context, sourceText, sourceLang, targetLang string) (*domain.Translation, error) {
+	var t domain.Translation
+	err := r.db.QueryRow(ctx,
+		`SELECT id, source_text, target_text, source_lang, target_lang, created_at
+		 FROM translations
+		 WHERE source_text = $1 AND source_lang = $2 AND target_lang = $3
+		 ORDER BY created_at DESC LIMIT 1`,
+		sourceText, sourceLang, targetLang).
+		Scan(&t.ID, &t.SourceText, &t.TargetText, &t.SourceLang, &t.TargetLang, &t.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
 func (r *TranslationRepo) Create(ctx context.Context, t *domain.Translation) error {
 	return r.db.QueryRow(ctx,
 		`INSERT INTO translations (source_text, target_text, source_lang, target_lang)

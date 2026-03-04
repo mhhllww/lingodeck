@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Port        string
 	DatabaseURL string
+	DeepLAPIKey string
 }
 
 func Load() *Config {
@@ -22,5 +23,6 @@ func Load() *Config {
 	return &Config{
 		Port:        port,
 		DatabaseURL: os.Getenv("DATABASE_URL"),
+		DeepLAPIKey: os.Getenv("DEEPL_API_KEY"),
 	}
 }
