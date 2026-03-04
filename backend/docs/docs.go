@@ -771,6 +771,12 @@ const docTemplate = `{
                 "part_of_speech": {
                     "type": "string"
                 },
+                "synonyms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "transcription": {
                     "type": "string"
                 },
