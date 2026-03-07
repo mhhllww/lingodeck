@@ -25,7 +25,6 @@ export default function RootLayout({
             <MSWInit />
             <BackendInit />
             <ShellLayout>{children}</ShellLayout>
-            <ExploreFAB />
           </AuthProvider>
         </Providers>
       </body>

@@ -287,7 +287,7 @@ export function DictionaryTable() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header + Toolbar */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Dictionary</h1>
@@ -296,9 +296,23 @@ export function DictionaryTable() {
             <span className="ml-2 opacity-50">— start typing to search</span>
           </p>
         </div>
+        {allCards.length > 0 && (
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleBulkDelete}
+              disabled={selectedCount === 0}
+              title={selectedCount > 0 ? `Delete ${selectedCount} ${selectedCount === 1 ? 'word' : 'words'}` : 'Select words to delete'}
+              className="text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Toolbar: search badge + tags + bulk delete */}
+      {/* Tags + search badge */}
       {allCards.length > 0 && (
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5 flex-1">
@@ -338,16 +352,6 @@ export function DictionaryTable() {
               </Badge>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleBulkDelete}
-            disabled={selectedCount === 0}
-            title={selectedCount > 0 ? `Delete ${selectedCount} ${selectedCount === 1 ? 'word' : 'words'}` : 'Select words to delete'}
-            className="text-[var(--muted-foreground)] hover:text-[var(--destructive)] shrink-0"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
         </div>
       )}
 
