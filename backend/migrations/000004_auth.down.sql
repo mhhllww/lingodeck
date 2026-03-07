@@ -1,0 +1,5 @@
+ALTER TABLE cards DROP COLUMN IF EXISTS user_id;
+ALTER TABLE decks DROP COLUMN IF EXISTS user_id;
+DROP TABLE IF EXISTS refresh_tokens;
+DROP INDEX IF EXISTS idx_users_provider;
+DROP TABLE IF EXISTS users;
