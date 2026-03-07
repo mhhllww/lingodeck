@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, BookOpen, FolderInput } from 'lucide-react';
+import { BookOpen, FolderInput } from 'lucide-react';
 import { FlipCard } from './FlipCard';
 import { CardFilters } from './CardFilters';
 import { CreateCardModal } from './CreateCardModal';
@@ -63,18 +63,12 @@ const { toast } = useToast();
             {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
           </p>
         </div>
-        <div className="flex gap-2 shrink-0">
-          {deckId && (
-            <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2">
-              <FolderInput className="h-4 w-4" />
-              <span className="hidden sm:inline">Add existing</span>
-            </Button>
-          )}
-          <Button onClick={() => setModalOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">New Card</span>
+        {deckId && (
+          <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2 shrink-0">
+            <FolderInput className="h-4 w-4" />
+            <span className="hidden sm:inline">Add existing</span>
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -117,16 +111,11 @@ const { toast } = useToast();
               Search for a word on the Explore page and save it, or create a card manually.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setModalOpen(true)} variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" /> Create your first card
+          {deckId && (
+            <Button onClick={() => setAddToDeckOpen(true)} variant="outline" className="gap-2">
+              <FolderInput className="h-4 w-4" /> Add existing
             </Button>
-            {deckId && (
-              <Button onClick={() => setAddToDeckOpen(true)} variant="outline" className="gap-2">
-                <FolderInput className="h-4 w-4" /> Add existing
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       ) : (
         <div className="py-12 text-center text-sm text-[var(--muted-foreground)]">
