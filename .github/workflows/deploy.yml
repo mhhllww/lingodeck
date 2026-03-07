@@ -41,8 +41,7 @@ jobs:
             cp -r /home/deploy/backend/migrations /home/deploy/migrations
             rm -rf /home/deploy/backend
 
-            # Run migrations before starting the server
-            migrate -path /home/deploy/migrations -database "$DATABASE_URL" up
+            /usr/bin/migrate -path /home/deploy/migrations -database "$DATABASE_URL" up
 
             sudo systemctl start lingodeck
 
