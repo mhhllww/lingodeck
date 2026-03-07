@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_ROUTES = ['/', '/cards', '/decks', '/dictionary'];
+const PROTECTED_ROUTES = ['/cards', '/decks', '/dictionary'];
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/check-email'];
 
 export function middleware(request: NextRequest) {
   const hasAccessToken = request.cookies.has('access_token');
   const { pathname } = request.nextUrl;
 
-  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isProtected =
+    pathname === '/' || PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
   if (isProtected && !hasAccessToken) {
