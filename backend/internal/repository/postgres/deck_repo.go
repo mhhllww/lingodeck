@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mhlw/lingodeck/internal/domain"
@@ -16,12 +17,13 @@ func NewDeckRepo(db *pgxpool.Pool) *DeckRepo {
 	return &DeckRepo{db: db}
 }
 
-func (r *DeckRepo) List(ctx context.Context) ([]domain.Deck, error) {
+func (r *DeckRepo) List(ctx context.Context, userID uuid.UUID) ([]domain.Deck, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT d.id, d.name, d.description, d.color, d.tags,
 		 COUNT(c.id) AS card_count, d.created_at, d.updated_at
 		 FROM decks d LEFT JOIN cards c ON c.deck_id = d.id
-		 GROUP BY d.id ORDER BY d.created_at`)
+		 WHERE d.user_id = $1
+		 GROUP BY d.id ORDER BY d.created_at`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,9 +61,9 @@ func (r *DeckRepo) GetByID(ctx context.Context, id int) (*domain.Deck, error) {
 
 func (r *DeckRepo) Create(ctx context.Context, d *domain.Deck) error {
 	return r.db.QueryRow(ctx,
-		`INSERT INTO decks (name, description, color, tags)
-		 VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`,
-		d.Name, d.Description, d.Color, emptyIfNil(d.Tags)).
+		`INSERT INTO decks (name, description, color, tags, user_id)
+		 VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at`,
+		d.Name, d.Description, d.Color, emptyIfNil(d.Tags), d.UserID).
 		Scan(&d.ID, &d.CreatedAt, &d.UpdatedAt)
 }
 
