@@ -296,10 +296,6 @@ export function DictionaryTable() {
             <span className="ml-2 opacity-50">— start typing to search</span>
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)} className="gap-2 shrink-0">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">New Card</span>
-        </Button>
       </div>
 
       {/* Toolbar: search badge + tags + bulk delete */}

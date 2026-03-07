@@ -5,6 +5,7 @@ import { MSWInit } from './msw-init';
 import { BackendInit } from './backend-init';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { ExploreFAB } from '@/components/search/ExploreFAB';
 
 export const metadata: Metadata = {
   title: 'LingoDeck — Personal Vocabulary Notebook',
@@ -29,6 +30,7 @@ export default function RootLayout({
               <main className="flex-1 min-w-0 px-4 py-6 lg:px-8 pb-20 lg:pb-6">
                 {children}
               </main>
+              <ExploreFAB />
             </div>
           </div>
         </Providers>
