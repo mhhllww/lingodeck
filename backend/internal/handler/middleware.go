@@ -1,10 +1,40 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+type contextKey string
+
+const contextKeyUserID contextKey = "userID"
+
+func getUserID(r *http.Request) (uuid.UUID, bool) {
+	id, ok := r.Context().Value(contextKeyUserID).(uuid.UUID)
+	return id, ok
+}
+
+// AuthMiddleware validates the access_token cookie and sets userID in context.
+func (h *AuthHandler) AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("access_token")
+		if err != nil {
+			respondError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
+			return
+		}
+		claims, err := h.svc.ValidateAccessToken(cookie.Value)
+		if err != nil {
+			respondError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
+			return
+		}
+		ctx := context.WithValue(r.Context(), contextKeyUserID, claims.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +48,7 @@ func CORS(next http.Handler) http.Handler {
 		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

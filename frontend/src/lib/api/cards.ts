@@ -1,4 +1,5 @@
 import type { VocabularyCard } from '@/types/card';
+import { fetchWithAuth } from './fetchWithAuth';
 
 const BASE = '/api/cards';
 
@@ -7,13 +8,13 @@ export async function fetchCards(params?: Record<string, string>): Promise<Vocab
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   }
-  const res = await fetch(url.toString());
+  const res = await fetchWithAuth(url.toString());
   if (!res.ok) throw new Error('Failed to fetch cards');
   return res.json();
 }
 
 export async function fetchCard(id: string): Promise<VocabularyCard> {
-  const res = await fetch(`${BASE}/${id}`);
+  const res = await fetchWithAuth(`${BASE}/${id}`);
   if (!res.ok) throw new Error('Failed to fetch card');
   return res.json();
 }
@@ -21,7 +22,7 @@ export async function fetchCard(id: string): Promise<VocabularyCard> {
 export async function createCard(
   data: Omit<VocabularyCard, 'id' | 'createdAt'>
 ): Promise<VocabularyCard> {
-  const res = await fetch(BASE, {
+  const res = await fetchWithAuth(BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -34,7 +35,7 @@ export async function updateCard(
   id: string,
   data: Partial<VocabularyCard>
 ): Promise<VocabularyCard> {
-  const res = await fetch(`${BASE}/${id}`, {
+  const res = await fetchWithAuth(`${BASE}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -44,6 +45,6 @@ export async function updateCard(
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+  const res = await fetchWithAuth(`${BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete card');
 }

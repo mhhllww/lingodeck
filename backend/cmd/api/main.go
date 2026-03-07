@@ -63,15 +63,18 @@ func main() {
 	translationRepo := postgres.NewTranslationRepo(pool)
 	cardRepo := postgres.NewCardRepo(pool)
 	deckRepo := postgres.NewDeckRepo(pool)
+	userRepo := postgres.NewUserRepo(pool)
 
 	// Services
 	groqSvc := service.NewGroqService(cfg.GroqAPIKey)
 	dictSvc := service.NewDictionaryService(wordRepo, groqSvc)
 	transSvc := service.NewTranslatorService(translationRepo, cfg.DeepLAPIKey)
 	cardSvc := service.NewCardService(cardRepo, deckRepo)
+	emailSvc := service.NewEmailService(cfg.ResendAPIKey, cfg.EmailFrom, cfg.AppURL)
+	authSvc := service.NewAuthService(userRepo, userRepo, emailSvc, cfg.JWTSecret, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
 
 	// Server
-	handler := server.New(dictSvc, transSvc, cardSvc)
+	handler := server.New(dictSvc, transSvc, cardSvc, authSvc, cfg.JWTSecureCookie)
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      handler,

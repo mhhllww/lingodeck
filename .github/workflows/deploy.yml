@@ -1,9 +1,7 @@
 name: Deploy
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
@@ -12,14 +10,11 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
           cache-dependency-path: backend/go.sum
-
       - run: go build -o server ./cmd/api
-
       - name: Stop backend
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -27,7 +22,6 @@ jobs:
           username: deploy
           key: ${{ secrets.SSH_KEY }}
           script: sudo systemctl stop lingodeck
-
       - name: Deploy backend
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -36,8 +30,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "backend/server,backend/migrations"
           target: "/home/deploy"
-
-      - name: Move files and start
+      - name: Move files, run migrations and start
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -47,6 +40,10 @@ jobs:
             cp /home/deploy/backend/server /home/deploy/server
             cp -r /home/deploy/backend/migrations /home/deploy/migrations
             rm -rf /home/deploy/backend
+
+            # Run migrations before starting the server
+            migrate -path /home/deploy/migrations -database "$DATABASE_URL" up
+
             sudo systemctl start lingodeck
 
   deploy-frontend:
@@ -56,14 +53,11 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - run: npm ci
       - run: npm run build
-
       - name: Stop frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -71,7 +65,6 @@ jobs:
           username: deploy
           key: ${{ secrets.SSH_KEY }}
           script: sudo systemctl stop lingodeck-front || true
-
       - name: Clean old frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -79,7 +72,6 @@ jobs:
           username: deploy
           key: ${{ secrets.SSH_KEY }}
           script: rm -rf /var/www/lingodeck/frontend/.next
-
       - name: Deploy frontend
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -88,7 +80,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           source: "frontend/.next"
           target: "/var/www/lingodeck"
-
       - name: Start frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
