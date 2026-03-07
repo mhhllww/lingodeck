@@ -41,6 +41,7 @@ export type CardSortOrder = 'asc' | 'desc';
 export interface CardFilters {
   query: string;
   tags: string[];
+  deckId: string | null;
   sortField: CardSortField;
   sortOrder: CardSortOrder;
 }

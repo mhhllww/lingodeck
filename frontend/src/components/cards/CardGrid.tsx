@@ -10,6 +10,7 @@ import { AssignDeckModal } from './AssignDeckModal';
 import { AddCardsToDeckModal } from './AddCardsToDeckModal';
 import { Button } from '@/components/ui/button';
 import { useCards } from '@/hooks/useCards';
+import { useCardStore } from '@/store/useCardStore';
 import { useToast } from '@/components/ui/toast';
 import type { VocabularyCard } from '@/types/card';
 
@@ -19,6 +20,7 @@ interface CardGridProps {
 
 export function CardGrid({ deckId }: CardGridProps = {}) {
   const { cards: filteredCards, allCards: allStoreCards, filters, deleteCard, setFilters } = useCards();
+  const decks = useCardStore((s) => s.decks);
   const cards = deckId ? filteredCards.filter((c) => c.deckId === deckId) : filteredCards;
   const allCards = deckId ? allStoreCards.filter((c) => c.deckId === deckId) : allStoreCards;
 const { toast } = useToast();
@@ -77,7 +79,7 @@ const { toast } = useToast();
 
       {/* Filters */}
       {allCards.length > 0 && (
-        <CardFilters filters={filters} allTags={allTags} onChange={setFilters} />
+        <CardFilters filters={filters} allTags={allTags} decks={decks} onChange={setFilters} />
       )}
 
       {/* Grid */}

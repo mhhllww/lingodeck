@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,23 +16,35 @@ interface FlipCardProps {
 }
 
 export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const { speak, isSpeaking, isSupported } = useSpeech();
+  const flipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFlipped = rotation % 360 !== 0;
 
-  const handleFlip = (e: React.MouseEvent) => {
-    // Prevent flip when clicking controls
-    if ((e.target as HTMLElement).closest('[data-no-flip]')) return;
-    setIsFlipped((f) => !f);
-  };
+  const handleMouseEnter = useCallback(() => {
+    setShowControls(true);
+    flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 500);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setShowControls(false);
+    if (flipTimer.current) {
+      clearTimeout(flipTimer.current);
+      flipTimer.current = null;
+    }
+    flipTimer.current = setTimeout(() => {
+      setRotation((r) => r % 360 !== 0 ? r + 180 : r);
+    }, 500);
+  }, []);
 
   return (
     <div
       className="relative"
       style={{ perspective: '1000px', height: '220px' }}
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Controls overlay */}
       <motion.div
@@ -76,15 +88,12 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
       <motion.div
         className="relative w-full h-full cursor-pointer"
         style={{ transformStyle: 'preserve-3d' }}
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        animate={{ rotateY: rotation }}
         transition={{ duration: 0.4, ease: 'easeInOut' }}
         onAnimationStart={() => setIsAnimating(true)}
         onAnimationComplete={() => setIsAnimating(false)}
-        onClick={handleFlip}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsFlipped((f) => !f); }}
-        aria-label={`Vocabulary card: ${card.word}. Click to flip.`}
+        role="group"
+        aria-label={`Vocabulary card: ${card.word}`}
       >
         {/* Front */}
         <div
@@ -116,7 +125,7 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <p className="text-xs text-[var(--muted-foreground)]">Click to see translation</p>
+          <p className="text-xs text-[var(--muted-foreground)]">Hover to see translation</p>
         </div>
 
         {/* Back */}
@@ -147,7 +156,7 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <p className="text-xs text-[var(--muted-foreground)]">Click to see word</p>
+          <p className="text-xs text-[var(--muted-foreground)]">Move cursor away to see word</p>
         </div>
       </motion.div>
     </div>
