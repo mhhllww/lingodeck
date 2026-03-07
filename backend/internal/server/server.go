@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/mhlw/lingodeck/internal/domain"
 	"github.com/mhlw/lingodeck/internal/handler"
 	"github.com/mhlw/lingodeck/internal/service"
 
@@ -13,6 +14,8 @@ func New(
 	dictSvc service.DictionaryService,
 	transSvc service.TranslatorService,
 	cardSvc service.CardService,
+	authSvc domain.AuthService,
+	secureCookie bool,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -21,35 +24,53 @@ func New(
 	cardH := handler.NewCardHandler(cardSvc)
 	deckH := handler.NewDeckHandler(cardSvc)
 	studyH := handler.NewStudyHandler(cardSvc)
+	authH := handler.NewAuthHandler(authSvc, secureCookie)
 
-	// Dictionary
-	mux.HandleFunc("GET /api/dictionary/search", dictH.Search)
-	mux.HandleFunc("GET /api/dictionary/words/{id}", dictH.GetWord)
+	auth := authH.AuthMiddleware
 
-	// Translator
-	mux.HandleFunc("POST /api/translate", transH.Translate)
-	mux.HandleFunc("GET /api/translate/history", transH.History)
+	// Auth — public
+	mux.HandleFunc("POST /api/auth/register", authH.Register)
+	mux.HandleFunc("POST /api/auth/login", authH.Login)
+	mux.HandleFunc("POST /api/auth/logout", authH.Logout)
+	mux.HandleFunc("POST /api/auth/refresh", authH.Refresh)
+	mux.HandleFunc("POST /api/auth/verify-email", authH.VerifyEmail)
+	mux.HandleFunc("POST /api/auth/forgot-password", authH.ForgotPassword)
+	mux.HandleFunc("POST /api/auth/reset-password", authH.ResetPassword)
+	mux.HandleFunc("POST /api/auth/resend-verification", authH.ResendVerification)
+	mux.HandleFunc("GET /api/auth/google", authH.GoogleAuth)
+	mux.HandleFunc("GET /api/auth/google/callback", authH.GoogleCallback)
 
-	// Decks
-	mux.HandleFunc("GET /api/decks", deckH.ListDecks)
-	mux.HandleFunc("POST /api/decks", deckH.CreateDeck)
-	mux.HandleFunc("GET /api/decks/{id}", deckH.GetDeck)
-	mux.HandleFunc("PUT /api/decks/{id}", deckH.UpdateDeck)
-	mux.HandleFunc("DELETE /api/decks/{id}", deckH.DeleteDeck)
+	// Auth — protected
+	mux.Handle("GET /api/auth/me", auth(http.HandlerFunc(authH.Me)))
 
-	// Cards (nested under deck)
-	mux.HandleFunc("GET /api/decks/{deckId}/cards", cardH.ListCards)
-	mux.HandleFunc("POST /api/decks/{deckId}/cards", cardH.CreateCard)
+	// Dictionary — protected
+	mux.Handle("GET /api/dictionary/search", auth(http.HandlerFunc(dictH.Search)))
+	mux.Handle("GET /api/dictionary/words/{id}", auth(http.HandlerFunc(dictH.GetWord)))
 
-	// Cards (flat)
-	mux.HandleFunc("GET /api/cards", cardH.ListAllCards)
-	mux.HandleFunc("GET /api/cards/{id}", cardH.GetCard)
-	mux.HandleFunc("POST /api/cards", cardH.CreateCardFlat)
-	mux.HandleFunc("PUT /api/cards/{id}", cardH.UpdateCard)
-	mux.HandleFunc("DELETE /api/cards/{id}", cardH.DeleteCard)
+	// Translator — protected
+	mux.Handle("POST /api/translate", auth(http.HandlerFunc(transH.Translate)))
+	mux.Handle("GET /api/translate/history", auth(http.HandlerFunc(transH.History)))
 
-	// Study
-	mux.HandleFunc("POST /api/study/results", studyH.SaveResults)
+	// Decks — protected
+	mux.Handle("GET /api/decks", auth(http.HandlerFunc(deckH.ListDecks)))
+	mux.Handle("POST /api/decks", auth(http.HandlerFunc(deckH.CreateDeck)))
+	mux.Handle("GET /api/decks/{id}", auth(http.HandlerFunc(deckH.GetDeck)))
+	mux.Handle("PUT /api/decks/{id}", auth(http.HandlerFunc(deckH.UpdateDeck)))
+	mux.Handle("DELETE /api/decks/{id}", auth(http.HandlerFunc(deckH.DeleteDeck)))
+
+	// Cards (nested under deck) — protected
+	mux.Handle("GET /api/decks/{deckId}/cards", auth(http.HandlerFunc(cardH.ListCards)))
+	mux.Handle("POST /api/decks/{deckId}/cards", auth(http.HandlerFunc(cardH.CreateCard)))
+
+	// Cards (flat) — protected
+	mux.Handle("GET /api/cards", auth(http.HandlerFunc(cardH.ListAllCards)))
+	mux.Handle("GET /api/cards/{id}", auth(http.HandlerFunc(cardH.GetCard)))
+	mux.Handle("POST /api/cards", auth(http.HandlerFunc(cardH.CreateCardFlat)))
+	mux.Handle("PUT /api/cards/{id}", auth(http.HandlerFunc(cardH.UpdateCard)))
+	mux.Handle("DELETE /api/cards/{id}", auth(http.HandlerFunc(cardH.DeleteCard)))
+
+	// Study — protected
+	mux.Handle("POST /api/study/results", auth(http.HandlerFunc(studyH.SaveResults)))
 
 	// Swagger
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
