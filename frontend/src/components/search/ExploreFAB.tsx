@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Search, Pencil } from 'lucide-react';
+import { Plus, Search, Pencil, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExploreModal } from './ExploreModal';
 import { CreateCardModal } from '@/components/cards/CreateCardModal';
+import { CreateDeckModal } from '@/components/cards/CreateDeckModal';
 
 export function ExploreFAB() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [deckOpen, setDeckOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +31,17 @@ export function ExploreFAB() {
         <AnimatePresence>
           {menuOpen && (
             <>
+              <motion.button
+                initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                transition={{ duration: 0.15, delay: 0.1 }}
+                onClick={() => { setMenuOpen(false); setDeckOpen(true); }}
+                className="flex items-center gap-2 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-lg pl-4 pr-3 py-2.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
+              >
+                New deck
+                <Layers className="h-4 w-4 text-[var(--muted-foreground)]" />
+              </motion.button>
               <motion.button
                 initial={{ opacity: 0, y: 10, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -67,6 +80,7 @@ export function ExploreFAB() {
 
       <ExploreModal open={exploreOpen} onOpenChange={setExploreOpen} />
       <CreateCardModal open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateDeckModal open={deckOpen} onOpenChange={setDeckOpen} />
     </>
   );
 }

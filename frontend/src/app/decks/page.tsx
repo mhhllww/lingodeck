@@ -114,11 +114,6 @@ export default function DecksPage() {
             {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
           </p>
         </div>
-        {decks.length > 0 && (
-          <Button onClick={() => setModalOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> New Deck
-          </Button>
-        )}
       </div>
 
       {decks.length === 0 ? (
