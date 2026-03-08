@@ -88,6 +88,15 @@ func scanWord(row pgx.Row) (*domain.Word, error) {
 	return &w, nil
 }
 
+func (r *DailyRepo) WordExistsInUserCards(ctx context.Context, userID uuid.UUID, word string) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM cards WHERE user_id = $1 AND front = $2)`,
+		userID, word,
+	).Scan(&exists)
+	return exists, err
+}
+
 // GetDailyMixCards returns up to 10 cards for the daily mix using priority logic.
 func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]domain.Card, error) {
 	rows, err := r.db.Query(ctx, `

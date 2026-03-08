@@ -52,9 +52,16 @@ func (s *dailyService) pickWordOfTheDay() {
 	}
 
 	word, err := s.repo.GetRandomWordNotInCards(ctx)
+	if err != nil {
+		slog.Error("daily cron: GetRandomWordNotInCards failed", "error", err)
+	}
 	if err != nil || word == nil {
 		word, err = s.repo.GetRandomWord(ctx)
-		if err != nil || word == nil {
+		if err != nil {
+			slog.Error("daily cron: GetRandomWord failed", "error", err)
+			return
+		}
+		if word == nil {
 			slog.Error("daily cron: no words available")
 			return
 		}
@@ -88,6 +95,12 @@ func (s *dailyService) GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*
 		Transcription: wod.Word.Transcription,
 		PartOfSpeech:  wod.Word.PartOfSpeech,
 		Definition:    definition,
+	}
+
+	// Check if word already in user's cards
+	already, err := s.repo.WordExistsInUserCards(ctx, userID, wod.Word.Word)
+	if err == nil {
+		resp.AlreadyAdded = already
 	}
 
 	// Find suggested deck for user

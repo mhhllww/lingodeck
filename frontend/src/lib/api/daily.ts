@@ -8,6 +8,7 @@ export interface WordOfTheDayData {
   part_of_speech: string;
   definition: string;
   suggested_deck: { id: number; name: string } | null;
+  already_added: boolean;
 }
 
 export interface DailyMixData {

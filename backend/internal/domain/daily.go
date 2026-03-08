@@ -21,6 +21,7 @@ type DailyRepository interface {
 	SetWordOfTheDay(ctx context.Context, wordID int, date time.Time) error
 	GetRandomWordNotInCards(ctx context.Context) (*Word, error)
 	GetRandomWord(ctx context.Context) (*Word, error)
+	WordExistsInUserCards(ctx context.Context, userID uuid.UUID, word string) (bool, error)
 
 	// Daily mix
 	GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]Card, error)
@@ -44,6 +45,7 @@ type WordOfTheDayResponse struct {
 	PartOfSpeech  string         `json:"part_of_speech"`
 	Definition    string         `json:"definition"`
 	SuggestedDeck *SuggestedDeck `json:"suggested_deck"`
+	AlreadyAdded  bool           `json:"already_added"`
 }
 
 type DailyMixProgress struct {

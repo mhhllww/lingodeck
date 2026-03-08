@@ -24,7 +24,7 @@ function WordOfTheDayWidget() {
 
   if (isError || !data) return null;
 
-  const added = addMutation.isSuccess;
+  const added = addMutation.isSuccess || data.already_added;
 
   return (
     <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-3 space-y-2">
@@ -62,7 +62,7 @@ function WordOfTheDayWidget() {
         >
           {added ? (
             <span className="flex items-center justify-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> Added
+              <CheckCircle2 className="h-3 w-3" /> Already added
             </span>
           ) : (
             `Add to «${data.suggested_deck.name}»`
