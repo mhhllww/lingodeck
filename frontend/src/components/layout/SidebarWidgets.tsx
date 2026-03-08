@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { SaveCardButton } from '@/components/cards/SaveCardButton';
 
 // ── Word of the Day ────────────────────────────────────────
 
@@ -76,6 +77,17 @@ function WordOfTheDayWidget() {
           {data.definition}
         </p>
       )}
+
+      <SaveCardButton
+        cardData={{
+          word: data.word,
+          translation: '',
+          transcription: data.transcription,
+          partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
+          definitions: data.definition ? [data.definition] : undefined,
+        }}
+        suggestedTags={[]}
+      />
 
       {decks.length > 0 && (
         <div className="space-y-1.5">
