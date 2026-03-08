@@ -10,17 +10,21 @@ import (
 )
 
 type dailyService struct {
-	repo  domain.DailyRepository
+	repo domain.DailyRepository
 	decks domain.DeckRepository
 	cards domain.CardRepository
+	dict DictionaryService
+	groq *GroqService
 }
 
 func NewDailyService(
 	repo domain.DailyRepository,
 	decks domain.DeckRepository,
 	cards domain.CardRepository,
+	dict DictionaryService,
+	groq *GroqService,
 ) domain.DailyService {
-	svc := &dailyService{repo: repo, decks: decks, cards: cards}
+	svc := &dailyService{repo: repo, decks: decks, cards: cards, dict: dict, groq: groq}
 	go svc.runCron()
 	return svc
 }
@@ -51,27 +55,49 @@ func (s *dailyService) pickWordOfTheDay() {
 		return
 	}
 
-	word, err := s.repo.GetRandomWordNotInCards(ctx)
+	recentWords, err := s.repo.GetRecentWords(ctx, 30)
 	if err != nil {
-		slog.Error("daily cron: GetRandomWordNotInCards failed", "error", err)
-	}
-	if err != nil || word == nil {
-		word, err = s.repo.GetRandomWord(ctx)
-		if err != nil {
-			slog.Error("daily cron: GetRandomWord failed", "error", err)
-			return
-		}
-		if word == nil {
-			slog.Error("daily cron: no words available")
-			return
-		}
+		slog.Error("daily cron: failed to get recent words", "error", err)
+		recentWords = []string{}
 	}
 
-	if err := s.repo.SetWordOfTheDay(ctx, word.ID, today); err != nil {
-		slog.Error("daily cron: failed to set word of the day", "error", err)
+	const maxAttempts = 3
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		wordStr, err := s.groq.GenerateWordOfTheDay(ctx, recentWords)
+		if err != nil {
+			slog.Error("daily cron: Groq failed", "attempt", attempt, "error", err)
+			continue
+		}
+
+		// Check if already used in last 30 days
+		alreadyUsed := false
+		for _, w := range recentWords {
+			if w == wordStr {
+				alreadyUsed = true
+				break
+			}
+		}
+		if alreadyUsed {
+			slog.Warn("daily cron: Groq returned already-used word, retrying", "word", wordStr, "attempt", attempt)
+			continue
+		}
+
+		// Enrich via DictionaryService (saves to words if not exists)
+		words, err := s.dict.Search(ctx, wordStr)
+		if err != nil || len(words) == 0 {
+			slog.Error("daily cron: failed to enrich word", "word", wordStr, "attempt", attempt, "error", err)
+			continue
+		}
+
+		if err := s.repo.SetWordOfTheDay(ctx, words[0].ID, today); err != nil {
+			slog.Error("daily cron: failed to set word of the day", "error", err)
+			return
+		}
+		slog.Info("daily cron: word of the day set", "word", wordStr)
 		return
 	}
-	slog.Info("daily cron: word of the day set", "word", word.Word)
+
+	slog.Error("daily cron: all attempts failed, no word of the day today")
 }
 
 func (s *dailyService) GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*domain.WordOfTheDayResponse, error) {

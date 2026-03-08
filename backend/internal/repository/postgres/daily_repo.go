@@ -53,25 +53,34 @@ func (r *DailyRepo) SetWordOfTheDay(ctx context.Context, wordID int, date time.T
 	return err
 }
 
-func (r *DailyRepo) GetRandomWordNotInCards(ctx context.Context) (*domain.Word, error) {
-	row := r.db.QueryRow(ctx, `
-		SELECT id, word, transcription, part_of_speech, definitions, examples, synonyms, created_at
-		FROM words
-		WHERE id NOT IN (
-			SELECT DISTINCT w.id FROM words w
-			JOIN cards c ON c.front = w.word
-		)
-		ORDER BY random()
-		LIMIT 1
-	`)
-	return scanWord(row)
+func (r *DailyRepo) GetRecentWords(ctx context.Context, limit int) ([]string, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT w.word FROM word_of_the_day wod
+		JOIN words w ON w.id = wod.word_id
+		ORDER BY wod.date DESC
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var words []string
+	for rows.Next() {
+		var word string
+		if err := rows.Scan(&word); err != nil {
+			return nil, err
+		}
+		words = append(words, word)
+	}
+	return words, rows.Err()
 }
 
-func (r *DailyRepo) GetRandomWord(ctx context.Context) (*domain.Word, error) {
+func (r *DailyRepo) GetWordByWord(ctx context.Context, word string) (*domain.Word, error) {
 	row := r.db.QueryRow(ctx, `
 		SELECT id, word, transcription, part_of_speech, definitions, examples, synonyms, created_at
-		FROM words ORDER BY random() LIMIT 1
-	`)
+		FROM words WHERE word = $1
+	`, word)
 	return scanWord(row)
 }
 
@@ -140,7 +149,7 @@ func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]d
 			  AND id NOT IN (SELECT id FROM fresh)
 			LIMIT 1
 		)
-		SELECT `+cardColumns+` FROM (
+		SELECT `+cardColumns+`, priority FROM (
 			SELECT * FROM hard
 			UNION ALL SELECT * FROM stale
 			UNION ALL SELECT * FROM fresh
@@ -181,7 +190,7 @@ func (r *DailyRepo) GetDailyProgressCount(ctx context.Context, userID uuid.UUID,
 		SELECT COUNT(*) FROM cards
 		WHERE user_id = $1
 		  AND id = ANY($2)
-		  AND updated_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC')
+		  AND last_studied_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC')
 	`, userID, cardIDs).Scan(&count)
 	return count, err
 }

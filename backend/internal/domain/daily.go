@@ -19,8 +19,8 @@ type DailyRepository interface {
 	// Word of the day
 	GetWordOfTheDay(ctx context.Context, date time.Time) (*WordOfTheDay, error)
 	SetWordOfTheDay(ctx context.Context, wordID int, date time.Time) error
-	GetRandomWordNotInCards(ctx context.Context) (*Word, error)
-	GetRandomWord(ctx context.Context) (*Word, error)
+	GetRecentWords(ctx context.Context, limit int) ([]string, error)
+	GetWordByWord(ctx context.Context, word string) (*Word, error)
 	WordExistsInUserCards(ctx context.Context, userID uuid.UUID, word string) (bool, error)
 
 	// Daily mix

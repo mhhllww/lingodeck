@@ -90,10 +90,21 @@ function DailyMixWidget() {
     );
   }
 
-  if (isError || !data) return null;
+  const { cards, progress } = data ?? { cards: [], progress: { done: 0, total: 0 } };
 
-  const { cards, progress } = data;
-  if (cards.length === 0) return null;
+  if (isError || cards.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-[var(--border)] p-3 space-y-1">
+        <div className="flex items-center gap-1.5 text-[var(--muted-foreground)]">
+          <Zap className="h-3.5 w-3.5" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Daily Mix</span>
+        </div>
+        <p className="text-[11px] text-[var(--muted-foreground)]">
+          Add more cards to unlock your daily mix.
+        </p>
+      </div>
+    );
+  }
 
   const { done, total } = progress;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;

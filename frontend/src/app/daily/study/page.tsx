@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ export default function DailyStudyPage() {
   const router = useRouter();
   const { cards, clear } = useDailyStudyStore();
   const { bulkUpdateStudyStats } = useCardStore();
+  const queryClient = useQueryClient();
 
   const {
     phase,
@@ -50,6 +52,7 @@ export default function DailyStudyPage() {
     if (phase === 'results' && !statsApplied.current) {
       statsApplied.current = true;
       bulkUpdateStudyStats(gotIt.map((c) => c.id), againCounts);
+      queryClient.invalidateQueries({ queryKey: ['daily-mix'] });
     }
     if (phase !== 'results') statsApplied.current = false;
   }, [phase, gotIt, againCounts, bulkUpdateStudyStats]);
