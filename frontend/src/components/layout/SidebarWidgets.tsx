@@ -64,6 +64,7 @@ function WordOfTheDayWidget() {
       )}
 
       <SaveCardButton
+        size="sm"
         cardData={{
           word: data.word,
           translation: '',
