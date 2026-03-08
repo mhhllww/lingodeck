@@ -59,10 +59,9 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
   };
 
   const handleCreateDeck = async () => {
-    console.log('create deck');
     const name = inputValue.trim();
     if (!name) return;
-    const color = DECK_COLORS[decks.length % DECK_COLORS.length];
+    const color = DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)];
     const deck = await createDeckOnBackend({ name, tags: [], color });
     handleSelectDeck(deck);
   };

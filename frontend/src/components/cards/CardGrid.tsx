@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, FolderInput } from 'lucide-react';
+import { BookOpen, FolderInput, Plus } from 'lucide-react';
 import { SearchPalette } from '@/components/search/SearchPalette';
 import { FlipCard } from './FlipCard';
 import { CardFilters } from './CardFilters';
@@ -121,6 +121,9 @@ const { toast } = useToast();
               Search for a word on the Explore page and save it, or create a card manually.
             </p>
           </div>
+          <Button onClick={() => setModalOpen(true)} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" /> Add your first card
+          </Button>
           {deckId && (
             <Button onClick={() => setAddToDeckOpen(true)} variant="outline" className="gap-2">
               <FolderInput className="h-4 w-4" /> Add existing

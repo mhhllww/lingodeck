@@ -4,13 +4,14 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Layers, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { useCardStore } from '@/store/useCardStore';
 
 export default function DeckDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { decks } = useCardStore();
+  const { decks, updateDeck } = useCardStore();
 
   const deck = decks.find((d) => d.id === id);
 
@@ -38,9 +39,9 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span
-            className="h-3 w-3 rounded-full shrink-0"
-            style={{ backgroundColor: deck.color }}
+          <ColorPicker
+            value={deck.color}
+            onChange={(color) => updateDeck(id, { color })}
           />
           <h1 className="text-2xl font-bold text-[var(--foreground)] truncate">{deck.name}</h1>
         </div>

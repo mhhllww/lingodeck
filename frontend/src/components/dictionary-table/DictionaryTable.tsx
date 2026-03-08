@@ -1,6 +1,7 @@
 'use client';
 
 import {useState, useMemo, useCallback} from 'react';
+import {useRouter} from 'next/navigation';
 import {
     useReactTable,
     getCoreRowModel,
@@ -55,6 +56,7 @@ export function DictionaryTable() {
     const {allCards, deleteCard} = useCards();
     const decks = useCardStore((s) => s.decks);
     const {toast} = useToast();
+    const router = useRouter();
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
@@ -203,8 +205,12 @@ export function DictionaryTable() {
                     if (!deck) return <span className="text-[var(--muted-foreground)]">—</span>;
                     return (
                         <Badge
-                            className="text-xs text-white"
+                            className="text-xs text-white cursor-pointer hover:opacity-80 transition-opacity"
                             style={{backgroundColor: deck.color}}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/decks/${deckId}`);
+                            }}
                         >
                             {deck.name}
                         </Badge>
@@ -245,7 +251,7 @@ export function DictionaryTable() {
                 ),
             }),
         ],
-        [handleDelete, handleEdit, decks]
+        [handleDelete, handleEdit, decks, router]
     );
 
     const table = useReactTable({
@@ -369,7 +375,8 @@ export function DictionaryTable() {
                                         <ContextMenuTrigger asChild>
                                             <TableRow
                                                 className="group cursor-pointer"
-                                                onClick={() => handleEdit(row.original)}
+                                                data-state={row.getIsSelected() ? 'selected' : undefined}
+                                                onClick={() => row.toggleSelected()}
                                             >
                                                 {row.getVisibleCells().map((cell) => (
                                                     <TableCell key={cell.id}>

@@ -6,6 +6,7 @@ import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSpeech } from '@/hooks/useSpeech';
+import { useCardStore } from '@/store/useCardStore';
 import type { VocabularyCard } from '@/types/card';
 
 interface FlipCardProps {
@@ -16,6 +17,7 @@ interface FlipCardProps {
 }
 
 export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps) {
+  const deck = useCardStore((s) => s.decks.find((d) => d.id === card.deckId));
   const [rotation, setRotation] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -125,7 +127,17 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <p className="text-xs text-[var(--muted-foreground)]">Hover to see translation</p>
+          <div className="flex items-center justify-between gap-2">
+            {deck ? (
+              <span className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] truncate">
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: deck.color }} />
+                {deck.name}
+              </span>
+            ) : (
+              <span />
+            )}
+            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+          </div>
         </div>
 
         {/* Back */}
