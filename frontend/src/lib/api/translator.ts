@@ -1,4 +1,5 @@
 import type { TranslationResult } from '@/types/translation';
+import { fetchWithAuth } from './fetchWithAuth';
 
 export async function translateText(
   text: string,
@@ -6,7 +7,7 @@ export async function translateText(
 ): Promise<TranslationResult> {
   const [sourceLang, targetLang] = langPair.split('|');
 
-  const response = await fetch('/api/translate', {
+  const response = await fetchWithAuth('/api/translate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, source_lang: sourceLang, target_lang: targetLang }),
