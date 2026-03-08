@@ -170,48 +170,33 @@ func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.U
 }
 
 func (s *dailyService) GetDailyMix(ctx context.Context, userID uuid.UUID) (*domain.DailyMixResponse, error) {
-	candidates, err := s.repo.GetDailyMixCandidates(ctx, userID)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+
+	// Return saved mix if already generated today
+	savedIDs, err := s.repo.GetSavedDailyMix(ctx, userID, today)
 	if err != nil {
 		return nil, err
 	}
 
-	// Group by priority
-	groups := make(map[int][]domain.Card)
-	for _, c := range candidates {
-		groups[c.Priority] = append(groups[c.Priority], c.Card)
-	}
-
-	// Fill-up: targets per priority, leftover rolls into next group
-	targets := []struct{ priority, limit int }{
-		{1, 4}, {2, 3}, {3, 2}, {4, 1},
-	}
-
 	var selected []domain.Card
-	remaining := 10
-	for _, t := range targets {
-		bucket := groups[t.priority]
-		take := t.limit
-		if take > len(bucket) {
-			take = len(bucket)
+
+	if len(savedIDs) > 0 {
+		selected, err = s.repo.GetCardsByIDs(ctx, savedIDs)
+		if err != nil {
+			return nil, err
 		}
-		selected = append(selected, bucket[:take]...)
-		remaining -= take
-	}
-	// If any leftover slots remain, fill from unused candidates (already excluded dupes)
-	if remaining > 0 {
-		usedIDs := make(map[int]bool, len(selected))
-		for _, c := range selected {
-			usedIDs[c.ID] = true
+	} else {
+		// Generate fresh mix
+		selected, err = s.buildMix(ctx, userID)
+		if err != nil {
+			return nil, err
 		}
-		for _, c := range candidates {
-			if remaining == 0 {
-				break
+		if len(selected) > 0 {
+			ids := make([]int, len(selected))
+			for i, c := range selected {
+				ids[i] = c.ID
 			}
-			if !usedIDs[c.Card.ID] {
-				selected = append(selected, c.Card)
-				usedIDs[c.Card.ID] = true
-				remaining--
-			}
+			_ = s.repo.SaveDailyMix(ctx, userID, today, ids)
 		}
 	}
 
@@ -232,4 +217,51 @@ func (s *dailyService) GetDailyMix(ctx context.Context, userID uuid.UUID) (*doma
 			Total: len(selected),
 		},
 	}, nil
+}
+
+func (s *dailyService) buildMix(ctx context.Context, userID uuid.UUID) ([]domain.Card, error) {
+	candidates, err := s.repo.GetDailyMixCandidates(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := make(map[int][]domain.Card)
+	for _, c := range candidates {
+		groups[c.Priority] = append(groups[c.Priority], c.Card)
+	}
+
+	targets := []struct{ priority, limit int }{
+		{1, 4}, {2, 3}, {3, 2}, {4, 1},
+	}
+
+	var selected []domain.Card
+	remaining := 10
+	for _, t := range targets {
+		bucket := groups[t.priority]
+		take := t.limit
+		if take > len(bucket) {
+			take = len(bucket)
+		}
+		selected = append(selected, bucket[:take]...)
+		remaining -= take
+	}
+
+	if remaining > 0 {
+		usedIDs := make(map[int]bool, len(selected))
+		for _, c := range selected {
+			usedIDs[c.ID] = true
+		}
+		for _, c := range candidates {
+			if remaining == 0 {
+				break
+			}
+			if !usedIDs[c.Card.ID] {
+				selected = append(selected, c.Card)
+				usedIDs[c.Card.ID] = true
+				remaining--
+			}
+		}
+	}
+
+	return selected, nil
 }

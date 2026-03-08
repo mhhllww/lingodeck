@@ -25,6 +25,9 @@ type DailyRepository interface {
 
 	// Daily mix
 	GetDailyMixCandidates(ctx context.Context, userID uuid.UUID) ([]DailyMixCandidate, error)
+	GetSavedDailyMix(ctx context.Context, userID uuid.UUID, date time.Time) ([]int, error)
+	SaveDailyMix(ctx context.Context, userID uuid.UUID, date time.Time, cardIDs []int) error
+	GetCardsByIDs(ctx context.Context, cardIDs []int) ([]Card, error)
 	GetDailyProgressCount(ctx context.Context, userID uuid.UUID, cardIDs []int) (int, error)
 }
 

@@ -179,6 +179,42 @@ func (r *DailyRepo) GetDailyMixCandidates(ctx context.Context, userID uuid.UUID)
 	return candidates, rows.Err()
 }
 
+func (r *DailyRepo) GetSavedDailyMix(ctx context.Context, userID uuid.UUID, date time.Time) ([]int, error) {
+	var ids []int
+	err := r.db.QueryRow(ctx,
+		`SELECT card_ids FROM daily_mix WHERE user_id = $1 AND date = $2`,
+		userID, date.UTC().Truncate(24*time.Hour),
+	).Scan(&ids)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return ids, nil
+}
+
+func (r *DailyRepo) SaveDailyMix(ctx context.Context, userID uuid.UUID, date time.Time, cardIDs []int) error {
+	_, err := r.db.Exec(ctx,
+		`INSERT INTO daily_mix (user_id, date, card_ids) VALUES ($1, $2, $3)
+		 ON CONFLICT (user_id, date) DO NOTHING`,
+		userID, date.UTC().Truncate(24*time.Hour), cardIDs,
+	)
+	return err
+}
+
+func (r *DailyRepo) GetCardsByIDs(ctx context.Context, cardIDs []int) ([]domain.Card, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT `+cardColumns+` FROM cards WHERE id = ANY($1) ORDER BY array_position($1, id)`,
+		cardIDs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanCards(rows)
+}
+
 func (r *DailyRepo) GetDailyProgressCount(ctx context.Context, userID uuid.UUID, cardIDs []int) (int, error) {
 	if len(cardIDs) == 0 {
 		return 0, nil
