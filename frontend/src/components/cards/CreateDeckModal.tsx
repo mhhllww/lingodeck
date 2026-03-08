@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCardStore, DECK_COLORS, createDeckOnBackend } from '@/store/useCardStore';
+import { cn } from '@/lib/utils';
 import type { Deck } from '@/types/card';
+
+function randomColor(): string {
+  return DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)];
+}
 
 interface CreateDeckModalProps {
   open: boolean;
@@ -18,20 +23,54 @@ interface CreateDeckModalProps {
 export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckModalProps) {
   const { decks } = useCardStore();
   const [name, setName] = useState('');
+  const [color, setColor] = useState(randomColor);
+  const [customColor, setCustomColor] = useState('');
+
+  const customRafRef = useRef<number>(0);
+  const customLatestRef = useRef('');
+
+  const handleCustomInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    customLatestRef.current = (e.target as HTMLInputElement).value;
+    if (!customRafRef.current) {
+      customRafRef.current = requestAnimationFrame(() => {
+        setCustomColor(customLatestRef.current);
+        customRafRef.current = 0;
+      });
+    }
+  }, []);
+
+  const isCustom = !!customColor && !DECK_COLORS.includes(customColor as typeof DECK_COLORS[number]);
+  const activeColor = customColor || color;
+
+  // Check if name already exists
+  const nameExists = useMemo(
+    () => decks.some((d) => d.name.toLowerCase() === name.trim().toLowerCase()),
+    [decks, name]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
-    const color = DECK_COLORS[decks.length % DECK_COLORS.length];
-    const deck = await createDeckOnBackend({ name: trimmed, tags: [], color });
+    if (!trimmed || nameExists) return;
+    const deck = await createDeckOnBackend({ name: trimmed, tags: [], color: activeColor });
     onCreated?.(deck);
     onOpenChange(false);
     setName('');
+    setColor(randomColor());
+    setCustomColor('');
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) {
+      setName('');
+      setColor(randomColor());
+      setCustomColor('');
+    }
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
@@ -63,6 +102,7 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Name */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Deck name <span className="text-[var(--destructive)]">*</span>
@@ -74,6 +114,78 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                       required
                       autoFocus
                     />
+                    {nameExists && (
+                      <p className="text-xs text-[var(--destructive)]">
+                        A deck with this name already exists
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Color */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--foreground)]">Color</label>
+                    <div className="flex items-center gap-2">
+                      {DECK_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => { setColor(c); setCustomColor(''); }}
+                          className={cn(
+                            'h-7 w-7 rounded-full transition-all',
+                            activeColor === c
+                              ? 'ring-2 ring-offset-2 ring-offset-[var(--background)] ring-[var(--foreground)] scale-110'
+                              : 'hover:scale-110'
+                          )}
+                          style={{ backgroundColor: c }}
+                          aria-label={`Color ${c}`}
+                        />
+                      ))}
+
+                      {/* Custom color via native picker */}
+                      <div className="relative ml-1">
+                        <input
+                          type="color"
+                          defaultValue={color}
+                          onInput={handleCustomInput}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-7 h-7"
+                          title="Pick custom color"
+                        />
+                        <div
+                          className={cn(
+                            'h-7 w-7 rounded-full border-2 border-dashed border-[var(--border)] flex items-center justify-center transition-all pointer-events-none',
+                            isCustom && 'ring-2 ring-offset-2 ring-offset-[var(--background)] ring-[var(--foreground)] scale-110 border-solid border-transparent'
+                          )}
+                          style={isCustom ? { backgroundColor: customColor } : undefined}
+                        >
+                          {!isCustom && (
+                            <span className="text-[var(--muted-foreground)] text-xs font-bold">+</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Randomize */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => { setColor(randomColor()); setCustomColor(''); }}
+                        title="Random color"
+                        className="ml-auto"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  <div
+                    className="rounded-lg border border-[var(--border)] p-3 transition-colors"
+                    style={{ borderTopColor: activeColor, borderTopWidth: 3 }}
+                  >
+                    <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                      {name.trim() || 'Deck name'}
+                    </p>
+                    <p className="text-xs text-[var(--muted-foreground)] mt-0.5">0 cards</p>
                   </div>
 
                   <div className="flex gap-3 pt-1">
@@ -82,7 +194,7 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                         Cancel
                       </Button>
                     </Dialog.Close>
-                    <Button type="submit" className="flex-1" disabled={!name.trim()}>
+                    <Button type="submit" className="flex-1" disabled={!name.trim() || nameExists}>
                       Create Deck
                     </Button>
                   </div>

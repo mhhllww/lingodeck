@@ -81,6 +81,7 @@ export const useCardStore = create<CardStore>()(
       filters: {
         query: '',
         tags: [],
+        deckId: null,
         sortField: 'createdAt',
         sortOrder: 'desc',
       },
@@ -116,6 +117,12 @@ export const useCardStore = create<CardStore>()(
               c.word.toLowerCase().includes(q) ||
               c.translation.toLowerCase().includes(q)
           );
+        }
+
+        if (filters.deckId === 'no-deck') {
+          result = result.filter((c) => !c.deckId);
+        } else if (filters.deckId) {
+          result = result.filter((c) => c.deckId === filters.deckId);
         }
 
         if (filters.tags.length > 0) {

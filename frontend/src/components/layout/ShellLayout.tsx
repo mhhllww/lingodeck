@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import {ExploreFAB} from "@/components/search/ExploreFAB";
 
 const AUTH_PATHS = ['/login', '/register', '/check-email', '/verify-email', '/forgot-password', '/reset-password'];
 
@@ -22,6 +23,7 @@ export function ShellLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 min-w-0 px-4 py-6 lg:px-8 pb-20 lg:pb-6">
           {children}
         </main>
+        <ExploreFAB />
       </div>
     </div>
   );

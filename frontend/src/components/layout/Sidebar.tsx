@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, BookMarked, Table2, Layers } from 'lucide-react';
+import { Search, BookMarked, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Explore', icon: Search },
-  { href: '/cards', label: 'My Cards', icon: BookMarked },
+  { href: '/words', label: 'Words', icon: BookMarked },
   { href: '/decks', label: 'Decks', icon: Layers },
-  { href: '/dictionary', label: 'Dictionary', icon: Table2 },
 ];
 
 export function Sidebar() {

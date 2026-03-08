@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Layers, X, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCardStore } from '@/store/useCardStore';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { CreateDeckModal } from '@/components/cards/CreateDeckModal';
 import { formatDate } from '@/lib/utils';
 import type { Deck } from '@/types/card';
@@ -21,11 +22,16 @@ function DeckCard({
   lastStudiedAt: string | null;
 }) {
   const router = useRouter();
-  const { deleteDeck } = useCardStore();
+  const { deleteDeck, updateDeck } = useCardStore();
+  const [previewColor, setPreviewColor] = useState<string | null>(null);
+
+  const displayColor = previewColor ?? deck.color;
 
   const lastStudiedLabel = lastStudiedAt
     ? `Last studied ${formatDate(lastStudiedAt)}`
     : 'Not studied yet';
+
+  const handlePreview = useCallback((c: string) => setPreviewColor(c), []);
 
   return (
     <motion.div
@@ -35,14 +41,21 @@ function DeckCard({
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
       className="group relative rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden cursor-pointer hover:border-[var(--accent)]/50 transition-colors"
-      style={{ borderTopColor: deck.color, borderTopWidth: 3 }}
+      style={{ borderTopColor: displayColor, borderTopWidth: 3 }}
       onClick={() => router.push(`/decks/${deck.id}`)}
     >
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-3">
-          <h3 className="font-semibold text-[var(--foreground)] text-base leading-tight">
-            {deck.name}
-          </h3>
+          <div className="flex items-center gap-2 min-w-0">
+            <ColorPicker
+              value={deck.color}
+              onChange={(color) => { setPreviewColor(null); updateDeck(deck.id, { color }); }}
+              onPreview={handlePreview}
+            />
+            <h3 className="font-semibold text-[var(--foreground)] text-base leading-tight truncate">
+              {deck.name}
+            </h3>
+          </div>
           <button
             className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
             onClick={(e) => {
@@ -114,11 +127,6 @@ export default function DecksPage() {
             {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
           </p>
         </div>
-        {decks.length > 0 && (
-          <Button onClick={() => setModalOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> New Deck
-          </Button>
-        )}
       </div>
 
       {decks.length === 0 ? (

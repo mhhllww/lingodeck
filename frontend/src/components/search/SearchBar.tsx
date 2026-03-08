@@ -1,18 +1,15 @@
 'use client';
 
 import { useRef } from 'react';
-import { Search, X, Zap } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  batchMode?: boolean;
-  onBatchModeChange?: (enabled: boolean) => void;
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
@@ -20,8 +17,6 @@ export function SearchBar({
   value,
   onChange,
   placeholder = 'Type any word to explore...',
-  batchMode = false,
-  onBatchModeChange,
   inputRef: externalRef,
 }: SearchBarProps) {
   const internalRef = useRef<HTMLInputElement>(null);
@@ -36,10 +31,7 @@ export function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={cn(
-            'pl-10 pr-10 h-12 text-base rounded-xl border-[var(--border)] bg-[var(--surface)] focus:ring-[var(--accent)] shadow-sm transition-all',
-            batchMode && 'ring-2 ring-[var(--accent)]/40'
-          )}
+          className="pl-10 pr-10 h-12 text-base rounded-xl border-[var(--border)] bg-[var(--surface)] focus:ring-[var(--accent)] shadow-sm transition-all"
           autoFocus
           aria-label="Search word"
         />
@@ -66,22 +58,6 @@ export function SearchBar({
           )}
         </AnimatePresence>
       </div>
-
-      {onBatchModeChange && (
-        <button
-          onClick={() => onBatchModeChange(!batchMode)}
-          className={cn(
-            'flex items-center gap-1.5 text-xs transition-colors px-1',
-            batchMode
-              ? 'text-[var(--accent)] font-medium'
-              : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-          )}
-        >
-          <Zap className={cn('h-3 w-3', batchMode && 'fill-current')} />
-          Quick add mode
-          {batchMode && <span className="opacity-60">(active)</span>}
-        </button>
-      )}
     </div>
   );
 }

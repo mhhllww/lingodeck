@@ -3,6 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { MSWInit } from './msw-init';
 import { BackendInit } from './backend-init';
+import { ExploreFAB } from '@/components/search/ExploreFAB';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ShellLayout } from '@/components/layout/ShellLayout';
 
