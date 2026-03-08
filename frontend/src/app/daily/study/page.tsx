@@ -12,6 +12,7 @@ import { SessionResults } from '@/components/study/SessionResults';
 import { useStudySession } from '@/hooks/useStudySession';
 import { useCardStore } from '@/store/useCardStore';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
+import { saveStudyResults } from '@/lib/api/cards';
 
 const cardVariants = {
   initial: { opacity: 0, scale: 0.95 },
@@ -53,21 +54,16 @@ export default function DailyStudyPage() {
       statsApplied.current = true;
       bulkUpdateStudyStats(gotIt.map((c) => c.id), againCounts);
 
-      // Optimistically update daily-mix progress in cache
-      const studiedIds = new Set(gotIt.map((c) => c.id));
-      queryClient.setQueryData<import('@/lib/api/daily').DailyMixData>(
-        ['daily-mix'],
-        (old) => {
-          if (!old) return old;
-          const done = old.cards.filter((c) => studiedIds.has(c.id)).length;
-          return { ...old, progress: { ...old.progress, done } };
-        }
-      );
+      // Build results for backend
+      const results: { card_id: string; correct: boolean }[] = [
+        ...gotIt.map((c) => ({ card_id: c.id, correct: true })),
+        ...Object.entries(againCounts).map(([id]) => ({ card_id: id, correct: false })),
+      ];
 
-      // Refetch after a short delay to get real backend state
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['daily-mix'] });
-      }, 1500);
+      // Save to backend, then refetch daily-mix with updated last_studied_at
+      saveStudyResults(results)
+        .then(() => queryClient.invalidateQueries({ queryKey: ['daily-mix'] }))
+        .catch(() => queryClient.invalidateQueries({ queryKey: ['daily-mix'] }));
     }
     if (phase !== 'results') statsApplied.current = false;
   }, [phase, gotIt, againCounts, bulkUpdateStudyStats, queryClient]);
