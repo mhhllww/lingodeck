@@ -19,7 +19,8 @@ import {
 function WordOfTheDayWidget() {
   const { data, isLoading, isError } = useWordOfTheDay();
   const addMutation = useAddWordOfTheDay();
-  const { decks, cards } = useCardStore((s) => ({ decks: s.decks, cards: s.cards }));
+  const decks = useCardStore((s) => s.decks);
+  const cards = useCardStore((s) => s.cards);
   const [selectedDeckId, setSelectedDeckId] = useState<string>('');
 
   if (isLoading) {
@@ -132,7 +133,7 @@ function DailyMixWidget() {
 
   const { cards, progress } = data ?? { cards: [], progress: { done: 0, total: 0 } };
 
-  if (isError || cards.length === 0) {
+  if (isError || cards.length < 10) {
     return (
       <div className="rounded-xl border border-dashed border-[var(--border)] p-3 space-y-1">
         <div className="flex items-center gap-1.5 text-[var(--muted-foreground)]">
@@ -140,7 +141,7 @@ function DailyMixWidget() {
           <span className="text-[10px] font-semibold uppercase tracking-wider">Daily Mix</span>
         </div>
         <p className="text-[11px] text-[var(--muted-foreground)]">
-          Add more cards to unlock your daily mix.
+          Add at least 10 cards to unlock your daily mix.
         </p>
       </div>
     );
