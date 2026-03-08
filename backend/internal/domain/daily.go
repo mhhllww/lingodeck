@@ -30,7 +30,7 @@ type DailyRepository interface {
 
 type DailyService interface {
 	GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*WordOfTheDayResponse, error)
-	AddWordOfTheDayToDecks(ctx context.Context, userID uuid.UUID, deckID int) error
+	AddWordOfTheDayToDecks(ctx context.Context, userID uuid.UUID, deckID int) (*Card, error)
 	GetDailyMix(ctx context.Context, userID uuid.UUID) (*DailyMixResponse, error)
 }
 

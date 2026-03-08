@@ -141,15 +141,15 @@ func (s *dailyService) GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*
 	return resp, nil
 }
 
-func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.UUID, deckID int) error {
+func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.UUID, deckID int) (*domain.Card, error) {
 	today := time.Now().UTC().Truncate(24 * time.Hour)
 
 	wod, err := s.repo.GetWordOfTheDay(ctx, today)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if wod == nil || wod.Word == nil {
-		return domain.ErrNotFound
+		return nil, domain.ErrNotFound
 	}
 
 	card := &domain.Card{
@@ -163,7 +163,10 @@ func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.U
 		Examples:      wod.Word.Examples,
 		Synonyms:      wod.Word.Synonyms,
 	}
-	return s.cards.Create(ctx, card)
+	if err := s.cards.Create(ctx, card); err != nil {
+		return nil, err
+	}
+	return card, nil
 }
 
 func (s *dailyService) GetDailyMix(ctx context.Context, userID uuid.UUID) (*domain.DailyMixResponse, error) {

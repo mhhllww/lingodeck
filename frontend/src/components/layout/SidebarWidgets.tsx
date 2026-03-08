@@ -1,16 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Zap, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Sparkles, Zap, CheckCircle2, PlayCircle, ChevronDown } from 'lucide-react';
 import { useWordOfTheDay, useAddWordOfTheDay } from '@/hooks/useWordOfTheDay';
 import { useDailyMix } from '@/hooks/useDailyMix';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
+import { useCardStore } from '@/store/useCardStore';
 
 // ── Word of the Day ────────────────────────────────────────
 
 function WordOfTheDayWidget() {
   const { data, isLoading, isError } = useWordOfTheDay();
   const addMutation = useAddWordOfTheDay();
+  const decks = useCardStore((s) => s.decks);
+  const [selectedDeckId, setSelectedDeckId] = useState<string>('');
 
   if (isLoading) {
     return (
@@ -25,6 +29,7 @@ function WordOfTheDayWidget() {
   if (isError || !data) return null;
 
   const added = addMutation.isSuccess || data.already_added;
+  const deckId = selectedDeckId || (data.suggested_deck ? String(data.suggested_deck.id) : decks[0]?.id ?? '');
 
   return (
     <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-3 space-y-2">
@@ -51,23 +56,41 @@ function WordOfTheDayWidget() {
         </p>
       )}
 
-      {data.suggested_deck && (
-        <button
-          disabled={added || addMutation.isPending}
-          onClick={() => addMutation.mutate(data.suggested_deck!.id)}
-          className="w-full text-[11px] font-medium rounded-lg px-2 py-1.5 transition-colors
-            disabled:opacity-60 disabled:cursor-not-allowed
-            bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90
-            disabled:bg-[var(--muted)] disabled:text-[var(--muted-foreground)]"
-        >
-          {added ? (
-            <span className="flex items-center justify-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> Already added
-            </span>
-          ) : (
-            `Add to «${data.suggested_deck.name}»`
+      {decks.length > 0 && (
+        <div className="space-y-1.5">
+          {!added && (
+            <div className="relative">
+              <select
+                value={deckId}
+                onChange={(e) => setSelectedDeckId(e.target.value)}
+                className="w-full text-[11px] rounded-lg px-2 py-1.5 pr-6 appearance-none
+                  border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]
+                  focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+              >
+                {decks.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--muted-foreground)] pointer-events-none" />
+            </div>
           )}
-        </button>
+
+          <button
+            disabled={added || addMutation.isPending || !deckId}
+            onClick={() => addMutation.mutate(Number(deckId))}
+            className="w-full text-[11px] font-medium rounded-lg px-2 py-1.5 transition-colors
+              flex items-center justify-center gap-1
+              disabled:opacity-60 disabled:cursor-not-allowed
+              bg-[var(--accent)] text-white hover:bg-[var(--accent)]/90
+              disabled:bg-[var(--muted)] disabled:text-[var(--muted-foreground)]"
+          >
+            {added ? (
+              <><CheckCircle2 className="h-3 w-3" /> Already added</>
+            ) : (
+              'Add to deck'
+            )}
+          </button>
+        </div>
       )}
     </div>
   );

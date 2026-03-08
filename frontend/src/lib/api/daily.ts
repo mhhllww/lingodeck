@@ -22,13 +22,15 @@ export async function fetchWordOfTheDay(): Promise<WordOfTheDayData> {
   return res.json();
 }
 
-export async function addWordOfTheDayToDeck(deckId: number): Promise<void> {
+export async function addWordOfTheDayToDeck(deckId: number): Promise<VocabularyCard> {
   const res = await fetchWithAuth('/api/daily/word-of-the-day/add', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ deck_id: deckId }),
   });
   if (!res.ok) throw new Error(`Add word of the day error: ${res.status}`);
+  const data = await res.json();
+  return mapCard(data as Parameters<typeof mapCard>[0]);
 }
 
 export async function fetchDailyMix(): Promise<DailyMixData> {

@@ -51,7 +51,8 @@ func (h *DailyHandler) AddWordOfTheDay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.AddWordOfTheDayToDecks(r.Context(), userID, body.DeckID); err != nil {
+	card, err := h.svc.AddWordOfTheDayToDecks(r.Context(), userID, body.DeckID)
+	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "NOT_FOUND", "no word of the day")
 			return
@@ -60,7 +61,7 @@ func (h *DailyHandler) AddWordOfTheDay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, map[string]string{"status": "ok"})
+	respondJSON(w, http.StatusCreated, card)
 }
 
 func (h *DailyHandler) GetDailyMix(w http.ResponseWriter, r *http.Request) {
