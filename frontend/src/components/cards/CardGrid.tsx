@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, FolderInput } from 'lucide-react';
+import { SearchPalette } from '@/components/search/SearchPalette';
 import { FlipCard } from './FlipCard';
 import { CardFilters } from './CardFilters';
 import { CreateCardModal } from './CreateCardModal';
@@ -55,21 +56,30 @@ const { toast } = useToast();
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">My Cards</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
-          </p>
+      {/* Toolbar */}
+      {allCards.length > 0 && (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-1.5 flex-1">
+            <SearchPalette
+              value={filters.query}
+              onChange={(q) => setFilters({ query: q })}
+              totalCount={allCards.length}
+              filteredCount={cards.length}
+              disabled={modalOpen}
+            />
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
+              {!filters.query && <span className="ml-2 opacity-50">— start typing to search</span>}
+            </p>
+          </div>
+          {deckId && (
+            <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2 shrink-0">
+              <FolderInput className="h-4 w-4" />
+              <span className="hidden sm:inline">Add existing</span>
+            </Button>
+          )}
         </div>
-        {deckId && (
-          <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2 shrink-0">
-            <FolderInput className="h-4 w-4" />
-            <span className="hidden sm:inline">Add existing</span>
-          </Button>
-        )}
-      </div>
+      )}
 
       {/* Filters */}
       {allCards.length > 0 && (

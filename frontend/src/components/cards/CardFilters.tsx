@@ -1,7 +1,6 @@
 'use client';
 
-import { Search, SortAsc, SortDesc } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { SortAsc, SortDesc } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,17 +31,8 @@ export function CardFilters({ filters, allTags, decks, onChange }: CardFiltersPr
 
   return (
     <div className="space-y-3">
-      {/* Search + Deck + Sort row */}
+      {/* Deck + Sort row */}
       <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
-          <Input
-            value={filters.query}
-            onChange={(e) => onChange({ query: e.target.value })}
-            placeholder="Filter cards..."
-            className="pl-9 h-9"
-          />
-        </div>
         {decks.length > 0 && (
           <Select
             value={filters.deckId ?? 'all'}
