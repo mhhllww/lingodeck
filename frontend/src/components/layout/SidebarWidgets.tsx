@@ -7,13 +7,19 @@ import { useWordOfTheDay, useAddWordOfTheDay } from '@/hooks/useWordOfTheDay';
 import { useDailyMix } from '@/hooks/useDailyMix';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
 import { useCardStore } from '@/store/useCardStore';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 // ── Word of the Day ────────────────────────────────────────
 
 function WordOfTheDayWidget() {
   const { data, isLoading, isError } = useWordOfTheDay();
   const addMutation = useAddWordOfTheDay();
-  const decks = useCardStore((s) => s.decks);
+  const { decks, cards } = useCardStore((s) => ({ decks: s.decks, cards: s.cards }));
   const [selectedDeckId, setSelectedDeckId] = useState<string>('');
 
   if (isLoading) {
@@ -28,8 +34,12 @@ function WordOfTheDayWidget() {
 
   if (isError || !data) return null;
 
-  const added = addMutation.isSuccess || data.already_added;
+  // Check locally so deletion immediately reflects
+  const existsInStore = cards.some((c) => c.word.toLowerCase() === data.word.toLowerCase());
+  const added = addMutation.isSuccess || (data.already_added && existsInStore);
+
   const deckId = selectedDeckId || (data.suggested_deck ? String(data.suggested_deck.id) : decks[0]?.id ?? '');
+  const selectedDeck = decks.find((d) => d.id === deckId);
 
   return (
     <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-3 space-y-2">
@@ -59,20 +69,27 @@ function WordOfTheDayWidget() {
       {decks.length > 0 && (
         <div className="space-y-1.5">
           {!added && (
-            <div className="relative">
-              <select
-                value={deckId}
-                onChange={(e) => setSelectedDeckId(e.target.value)}
-                className="w-full text-[11px] rounded-lg px-2 py-1.5 pr-6 appearance-none
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center justify-between text-[11px] rounded-lg px-2 py-1.5
                   border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]
-                  focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
-              >
+                  hover:bg-[var(--muted)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--accent)]">
+                  <span className="truncate">{selectedDeck?.name ?? 'Select deck'}</span>
+                  <ChevronDown className="h-3 w-3 text-[var(--muted-foreground)] shrink-0 ml-1" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
                 {decks.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
+                  <DropdownMenuItem
+                    key={d.id}
+                    className="text-[11px]"
+                    onClick={() => setSelectedDeckId(d.id)}
+                  >
+                    {d.name}
+                  </DropdownMenuItem>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--muted-foreground)] pointer-events-none" />
-            </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           <button
