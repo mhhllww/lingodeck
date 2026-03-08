@@ -106,15 +106,15 @@ func (r *DailyRepo) WordExistsInUserCards(ctx context.Context, userID uuid.UUID,
 	return exists, err
 }
 
-// GetDailyMixCards returns up to 10 cards for the daily mix using priority logic.
-func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]domain.Card, error) {
+// GetDailyMixCandidates returns all candidate cards with priority (no per-group limit).
+// Fill-up logic is applied in the service layer.
+func (r *DailyRepo) GetDailyMixCandidates(ctx context.Context, userID uuid.UUID) ([]domain.DailyMixCandidate, error) {
 	rows, err := r.db.Query(ctx, `
 		WITH hard AS (
 			SELECT `+cardColumns+`, 1 AS priority
 			FROM cards
 			WHERE user_id = $1 AND times_incorrect > 0
 			ORDER BY times_incorrect DESC
-			LIMIT 4
 		),
 		stale AS (
 			SELECT `+cardColumns+`, 2 AS priority
@@ -123,7 +123,6 @@ func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]d
 			  AND (times_correct > 0 OR times_incorrect > 0)
 			  AND id NOT IN (SELECT id FROM hard)
 			ORDER BY updated_at ASC
-			LIMIT 3
 		),
 		fresh AS (
 			SELECT `+cardColumns+`, 3 AS priority
@@ -132,7 +131,6 @@ func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]d
 			  AND times_correct = 0 AND times_incorrect = 0
 			  AND id NOT IN (SELECT id FROM hard)
 			  AND id NOT IN (SELECT id FROM stale)
-			LIMIT 2
 		),
 		wod_card AS (
 			SELECT `+cardColumns+`, 4 AS priority
@@ -162,7 +160,7 @@ func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]d
 	}
 	defer rows.Close()
 
-	var cards []domain.Card
+	var candidates []domain.DailyMixCandidate
 	for rows.Next() {
 		var c domain.Card
 		var priority int
@@ -176,9 +174,9 @@ func (r *DailyRepo) GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]d
 		); err != nil {
 			return nil, err
 		}
-		cards = append(cards, c)
+		candidates = append(candidates, domain.DailyMixCandidate{Card: c, Priority: priority})
 	}
-	return cards, rows.Err()
+	return candidates, rows.Err()
 }
 
 func (r *DailyRepo) GetDailyProgressCount(ctx context.Context, userID uuid.UUID, cardIDs []int) (int, error) {

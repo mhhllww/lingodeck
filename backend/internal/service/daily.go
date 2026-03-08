@@ -170,13 +170,53 @@ func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.U
 }
 
 func (s *dailyService) GetDailyMix(ctx context.Context, userID uuid.UUID) (*domain.DailyMixResponse, error) {
-	cards, err := s.repo.GetDailyMixCards(ctx, userID)
+	candidates, err := s.repo.GetDailyMixCandidates(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	ids := make([]int, len(cards))
-	for i, c := range cards {
+	// Group by priority
+	groups := make(map[int][]domain.Card)
+	for _, c := range candidates {
+		groups[c.Priority] = append(groups[c.Priority], c.Card)
+	}
+
+	// Fill-up: targets per priority, leftover rolls into next group
+	targets := []struct{ priority, limit int }{
+		{1, 4}, {2, 3}, {3, 2}, {4, 1},
+	}
+
+	var selected []domain.Card
+	remaining := 10
+	for _, t := range targets {
+		bucket := groups[t.priority]
+		take := t.limit
+		if take > len(bucket) {
+			take = len(bucket)
+		}
+		selected = append(selected, bucket[:take]...)
+		remaining -= take
+	}
+	// If any leftover slots remain, fill from unused candidates (already excluded dupes)
+	if remaining > 0 {
+		usedIDs := make(map[int]bool, len(selected))
+		for _, c := range selected {
+			usedIDs[c.ID] = true
+		}
+		for _, c := range candidates {
+			if remaining == 0 {
+				break
+			}
+			if !usedIDs[c.Card.ID] {
+				selected = append(selected, c.Card)
+				usedIDs[c.Card.ID] = true
+				remaining--
+			}
+		}
+	}
+
+	ids := make([]int, len(selected))
+	for i, c := range selected {
 		ids[i] = c.ID
 	}
 
@@ -186,10 +226,10 @@ func (s *dailyService) GetDailyMix(ctx context.Context, userID uuid.UUID) (*doma
 	}
 
 	return &domain.DailyMixResponse{
-		Cards: cards,
+		Cards: selected,
 		Progress: domain.DailyMixProgress{
 			Done:  done,
-			Total: len(cards),
+			Total: len(selected),
 		},
 	}, nil
 }

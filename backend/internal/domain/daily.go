@@ -24,7 +24,7 @@ type DailyRepository interface {
 	WordExistsInUserCards(ctx context.Context, userID uuid.UUID, word string) (bool, error)
 
 	// Daily mix
-	GetDailyMixCards(ctx context.Context, userID uuid.UUID) ([]Card, error)
+	GetDailyMixCandidates(ctx context.Context, userID uuid.UUID) ([]DailyMixCandidate, error)
 	GetDailyProgressCount(ctx context.Context, userID uuid.UUID, cardIDs []int) (int, error)
 }
 
@@ -46,6 +46,11 @@ type WordOfTheDayResponse struct {
 	Definition    string         `json:"definition"`
 	SuggestedDeck *SuggestedDeck `json:"suggested_deck"`
 	AlreadyAdded  bool           `json:"already_added"`
+}
+
+type DailyMixCandidate struct {
+	Card     Card
+	Priority int
 }
 
 type DailyMixProgress struct {
