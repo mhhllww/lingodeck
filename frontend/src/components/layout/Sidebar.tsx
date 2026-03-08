@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Search, BookMarked, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SidebarWidgets } from './SidebarWidgets';
 
 const navItems = [
   { href: '/', label: 'Explore', icon: Search },
@@ -17,7 +18,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-[var(--border)] bg-[var(--background)] h-[calc(100vh-3.5rem)] sticky top-14">
+      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-[var(--border)] bg-[var(--background)] h-[calc(100vh-3.5rem)] sticky top-14 overflow-y-auto">
         <nav className="flex flex-col gap-1 p-3 pt-4">
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link
@@ -35,6 +36,7 @@ export function Sidebar() {
             </Link>
           ))}
         </nav>
+        <SidebarWidgets />
       </aside>
 
       {/* Mobile bottom nav */}

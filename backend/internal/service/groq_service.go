@@ -76,6 +76,63 @@ Rules:
 
 Word: %s`
 
+func (s *GroqService) GenerateWordOfTheDay(ctx context.Context, exclude []string) (string, error) {
+	excludeStr := strings.Join(exclude, ", ")
+	prompt := fmt.Sprintf(
+		"Give me one advanced English word suitable for vocabulary learning. "+
+			"Do not use any of these words: %s. "+
+			"Return only the word, nothing else.",
+		excludeStr,
+	)
+
+	reqBody := groqRequest{
+		Model: groqModel,
+		Messages: []groqMessage{
+			{Role: "user", Content: prompt},
+		},
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("marshaling groq request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, groqAPIURL, bytes.NewReader(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("creating groq request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("calling Groq API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("reading Groq response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Groq API error (status %d): %s", resp.StatusCode, string(respBody))
+	}
+
+	var groqResp groqResponse
+	if err := json.Unmarshal(respBody, &groqResp); err != nil {
+		return "", fmt.Errorf("decoding Groq response: %w", err)
+	}
+
+	if len(groqResp.Choices) == 0 {
+		return "", fmt.Errorf("Groq returned no choices")
+	}
+
+	word := strings.TrimSpace(groqResp.Choices[0].Message.Content)
+	word = strings.ToLower(word)
+	return word, nil
+}
+
 func (s *GroqService) EnrichWord(ctx context.Context, word string) (*domain.Word, error) {
 	reqBody := groqRequest{
 		Model: groqModel,

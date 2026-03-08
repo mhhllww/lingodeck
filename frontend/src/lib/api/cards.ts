@@ -48,3 +48,14 @@ export async function deleteCard(id: string): Promise<void> {
   const res = await fetchWithAuth(`${BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete card');
 }
+
+export async function saveStudyResults(
+  results: { card_id: string; correct: boolean }[]
+): Promise<void> {
+  const res = await fetchWithAuth('/api/study/results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ card_results: results }),
+  });
+  if (!res.ok && res.status !== 204) throw new Error('Failed to save study results');
+}
