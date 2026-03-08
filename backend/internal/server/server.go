@@ -15,6 +15,7 @@ func New(
 	transSvc service.TranslatorService,
 	cardSvc service.CardService,
 	authSvc domain.AuthService,
+	dailySvc domain.DailyService,
 	secureCookie bool,
 ) http.Handler {
 	mux := http.NewServeMux()
@@ -25,6 +26,7 @@ func New(
 	deckH := handler.NewDeckHandler(cardSvc)
 	studyH := handler.NewStudyHandler(cardSvc)
 	authH := handler.NewAuthHandler(authSvc, secureCookie)
+	dailyH := handler.NewDailyHandler(dailySvc)
 
 	auth := authH.AuthMiddleware
 
@@ -71,6 +73,11 @@ func New(
 
 	// Study — protected
 	mux.Handle("POST /api/study/results", auth(http.HandlerFunc(studyH.SaveResults)))
+
+	// Daily — protected
+	mux.Handle("GET /api/daily/word-of-the-day", auth(http.HandlerFunc(dailyH.GetWordOfTheDay)))
+	mux.Handle("POST /api/daily/word-of-the-day/add", auth(http.HandlerFunc(dailyH.AddWordOfTheDay)))
+	mux.Handle("GET /api/daily/mix", auth(http.HandlerFunc(dailyH.GetDailyMix)))
 
 	// Swagger
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
