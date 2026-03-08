@@ -52,10 +52,25 @@ export default function DailyStudyPage() {
     if (phase === 'results' && !statsApplied.current) {
       statsApplied.current = true;
       bulkUpdateStudyStats(gotIt.map((c) => c.id), againCounts);
-      queryClient.invalidateQueries({ queryKey: ['daily-mix'] });
+
+      // Optimistically update daily-mix progress in cache
+      const studiedIds = new Set(gotIt.map((c) => c.id));
+      queryClient.setQueryData<import('@/lib/api/daily').DailyMixData>(
+        ['daily-mix'],
+        (old) => {
+          if (!old) return old;
+          const done = old.cards.filter((c) => studiedIds.has(c.id)).length;
+          return { ...old, progress: { ...old.progress, done } };
+        }
+      );
+
+      // Refetch after a short delay to get real backend state
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['daily-mix'] });
+      }, 1500);
     }
     if (phase !== 'results') statsApplied.current = false;
-  }, [phase, gotIt, againCounts, bulkUpdateStudyStats]);
+  }, [phase, gotIt, againCounts, bulkUpdateStudyStats, queryClient]);
 
   const handleGotIt = useCallback(() => {
     setCardKey((k) => k + 1);

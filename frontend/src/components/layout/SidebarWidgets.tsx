@@ -33,7 +33,17 @@ function WordOfTheDayWidget() {
     );
   }
 
-  if (isError || !data) return null;
+  if (isError || !data) {
+    return (
+      <div className="rounded-xl border border-dashed border-[var(--accent)]/30 p-3 space-y-1">
+        <div className="flex items-center gap-1.5 text-[var(--accent)]">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Word of the day</span>
+        </div>
+        <p className="text-[11px] text-[var(--muted-foreground)]">No word for today yet — check back soon.</p>
+      </div>
+    );
+  }
 
   // Check locally so deletion immediately reflects
   const existsInStore = cards.some((c) => c.word.toLowerCase() === data.word.toLowerCase());
