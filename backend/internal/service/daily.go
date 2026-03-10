@@ -10,11 +10,12 @@ import (
 )
 
 type dailyService struct {
-	repo domain.DailyRepository
-	decks domain.DeckRepository
-	cards domain.CardRepository
-	dict DictionaryService
-	groq *GroqService
+	repo       domain.DailyRepository
+	decks      domain.DeckRepository
+	cards      domain.CardRepository
+	dict       DictionaryService
+	groq       *GroqService
+	translator TranslatorService
 }
 
 func NewDailyService(
@@ -23,8 +24,9 @@ func NewDailyService(
 	cards domain.CardRepository,
 	dict DictionaryService,
 	groq *GroqService,
+	translator TranslatorService,
 ) domain.DailyService {
-	svc := &dailyService{repo: repo, decks: decks, cards: cards, dict: dict, groq: groq}
+	svc := &dailyService{repo: repo, decks: decks, cards: cards, dict: dict, groq: groq, translator: translator}
 	go svc.runCron()
 	return svc
 }
@@ -116,8 +118,16 @@ func (s *dailyService) GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*
 		definition = wod.Word.Definitions[0]
 	}
 
+	translation := ""
+	if t, err := s.translator.Translate(ctx, wod.Word.Word, "EN", "RU"); err == nil {
+		translation = t.TargetText
+	} else {
+		slog.Warn("GetWordOfTheDay: translation failed", "word", wod.Word.Word, "error", err)
+	}
+
 	resp := &domain.WordOfTheDayResponse{
 		Word:          wod.Word.Word,
+		Translation:   translation,
 		Transcription: wod.Word.Transcription,
 		PartOfSpeech:  wod.Word.PartOfSpeech,
 		Definition:    definition,
@@ -152,11 +162,18 @@ func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.U
 		return nil, domain.ErrNotFound
 	}
 
+	back := ""
+	if t, err := s.translator.Translate(ctx, wod.Word.Word, "EN", "RU"); err == nil {
+		back = t.TargetText
+	} else {
+		slog.Warn("AddWordOfTheDayToDecks: translation failed", "word", wod.Word.Word, "error", err)
+	}
+
 	card := &domain.Card{
 		DeckID:        &deckID,
 		UserID:        &userID,
 		Front:         wod.Word.Word,
-		Back:          "",
+		Back:          back,
 		Transcription: wod.Word.Transcription,
 		PartOfSpeech:  []string{wod.Word.PartOfSpeech},
 		Definitions:   wod.Word.Definitions,

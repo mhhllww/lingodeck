@@ -4,6 +4,7 @@ import type { VocabularyCard } from '@/types/card';
 
 export interface WordOfTheDayData {
   word: string;
+  translation: string;
   transcription: string;
   part_of_speech: string;
   definition: string;

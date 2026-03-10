@@ -1,18 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Zap, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Sparkles, Zap, CheckCircle2, PlayCircle, Volume2 } from 'lucide-react';
 import { useWordOfTheDay } from '@/hooks/useWordOfTheDay';
 import { useDailyMix } from '@/hooks/useDailyMix';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
 import { useCardStore } from '@/store/useCardStore';
 import { SaveCardButton } from '@/components/cards/SaveCardButton';
+import { useSpeech } from '@/hooks/useSpeech';
 
 // ── Word of the Day ────────────────────────────────────────
 
 function WordOfTheDayWidget() {
   const { data, isLoading, isError } = useWordOfTheDay();
   const cards = useCardStore((s) => s.cards);
+  const { speak, isSpeaking, isSupported } = useSpeech();
+  const [translationRevealed, setTranslationRevealed] = useState(false);
 
   if (isLoading) {
     return (
@@ -51,9 +55,35 @@ function WordOfTheDayWidget() {
           {data.transcription && (
             <span className="text-[10px] text-[var(--muted-foreground)]">{data.transcription}</span>
           )}
+          {isSupported && (
+            <button
+              onClick={() => speak(data.word)}
+              className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+              aria-label="Pronounce word"
+            >
+              <Volume2 className={`h-3 w-3 ${isSpeaking ? 'text-[var(--accent)]' : ''}`} />
+            </button>
+          )}
         </div>
         {data.part_of_speech && (
-          <span className="text-[10px] italic text-[var(--muted-foreground)]">{data.part_of_speech}</span>
+          <div className="text-[10px] italic text-[var(--muted-foreground)]">{data.part_of_speech}</div>
+        )}
+        {data.translation && (
+          <button
+            onClick={() => setTranslationRevealed((v) => !v)}
+            className="mt-1 text-left"
+            aria-label={translationRevealed ? 'Hide translation' : 'Reveal translation'}
+          >
+            {translationRevealed ? (
+              <span className="text-[11px] font-medium text-[var(--foreground)]">
+                {data.translation}
+              </span>
+            ) : (
+              <span className="text-[10px] text-[var(--accent)] hover:underline transition-colors">
+                Tap to check translation
+              </span>
+            )}
+          </button>
         )}
       </div>
 
@@ -67,7 +97,7 @@ function WordOfTheDayWidget() {
         size="sm"
         cardData={{
           word: data.word,
-          translation: '',
+          translation: data.translation,
           transcription: data.transcription,
           partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
           definitions: data.definition ? [data.definition] : undefined,

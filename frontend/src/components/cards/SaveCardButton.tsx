@@ -54,14 +54,10 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved, size = 'lg' a
   };
 
   if (isSaved) {
-    const deckName = savedCard.deckId
-      ? decks.find((d) => d.id === savedCard.deckId)?.name
-      : undefined;
-
     return (
       <Button variant="outline" className="w-full gap-2" size={size} disabled>
         <BookmarkCheck className="h-4 w-4" />
-        {deckName ? `Saved in "${deckName}"` : 'Saved ✓'}
+        Saved
       </Button>
     );
   }

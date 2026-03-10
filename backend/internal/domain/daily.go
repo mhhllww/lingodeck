@@ -44,6 +44,7 @@ type SuggestedDeck struct {
 
 type WordOfTheDayResponse struct {
 	Word          string         `json:"word"`
+	Translation   string         `json:"translation"`
 	Transcription string         `json:"transcription"`
 	PartOfSpeech  string         `json:"part_of_speech"`
 	Definition    string         `json:"definition"`
