@@ -153,7 +153,7 @@ func (s *dailyService) AddWordOfTheDayToDecks(ctx context.Context, userID uuid.U
 	}
 
 	card := &domain.Card{
-		DeckID:        deckID,
+		DeckID:        &deckID,
 		UserID:        &userID,
 		Front:         wod.Word.Word,
 		Back:          "",
