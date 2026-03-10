@@ -163,6 +163,11 @@ func (r *CardRepo) DetachFromDeck(ctx context.Context, deckID int) error {
 	return err
 }
 
+func (r *CardRepo) DeleteByDeck(ctx context.Context, deckID int) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM cards WHERE deck_id = $1`, deckID)
+	return err
+}
+
 func emptyIfNil(s []string) []string {
 	if s == nil {
 		return []string{}
