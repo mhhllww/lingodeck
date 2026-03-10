@@ -142,9 +142,8 @@ func (h *CardHandler) CreateCardFlat(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	if c.DeckID == nil || *c.DeckID == 0 {
-		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "deck_id is required")
-		return
+	if c.DeckID != nil && *c.DeckID == 0 {
+		c.DeckID = nil
 	}
 	userID, _ := getUserID(r)
 	c.UserID = &userID
@@ -172,19 +171,55 @@ func (h *CardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var c domain.Card
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+	existing, err := h.svc.GetCard(r.Context(), id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "NOT_FOUND", "card not found")
+		return
+	}
+
+	var patch domain.Card
+	if err := json.NewDecoder(r.Body).Decode(&patch); err != nil {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	c.ID = id
 
-	if err := h.svc.UpdateCard(r.Context(), &c); err != nil {
+	if patch.Front != "" {
+		existing.Front = patch.Front
+	}
+	if patch.Back != "" {
+		existing.Back = patch.Back
+	}
+	if patch.Transcription != "" {
+		existing.Transcription = patch.Transcription
+	}
+	if patch.DeckID != nil {
+		existing.DeckID = patch.DeckID
+	}
+	if patch.PartOfSpeech != nil {
+		existing.PartOfSpeech = patch.PartOfSpeech
+	}
+	if patch.Definitions != nil {
+		existing.Definitions = patch.Definitions
+	}
+	if patch.Examples != nil {
+		existing.Examples = patch.Examples
+	}
+	if patch.Synonyms != nil {
+		existing.Synonyms = patch.Synonyms
+	}
+	if patch.Antonyms != nil {
+		existing.Antonyms = patch.Antonyms
+	}
+	if patch.Tags != nil {
+		existing.Tags = patch.Tags
+	}
+
+	if err := h.svc.UpdateCard(r.Context(), existing); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to update card")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, toCardResponse(c))
+	respondJSON(w, http.StatusOK, toCardResponse(*existing))
 }
 
 // DeleteCard godoc

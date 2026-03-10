@@ -81,7 +81,7 @@ export const useCardStore = create<CardStore>()(
       filters: {
         query: '',
         tags: [],
-        deckId: null,
+        deckIds: [],
         sortField: 'createdAt',
         sortOrder: 'desc',
       },
@@ -119,10 +119,12 @@ export const useCardStore = create<CardStore>()(
           );
         }
 
-        if (filters.deckId === 'no-deck') {
-          result = result.filter((c) => !c.deckId);
-        } else if (filters.deckId) {
-          result = result.filter((c) => c.deckId === filters.deckId);
+        if (filters.deckIds.length > 0) {
+          const ids = new Set(filters.deckIds);
+          result = result.filter((c) =>
+            ids.has('none') ? !c.deckId || (c.deckId != null && ids.has(c.deckId))
+              : c.deckId != null && ids.has(c.deckId)
+          );
         }
 
         if (filters.tags.length > 0) {
@@ -198,14 +200,24 @@ export const useCardStore = create<CardStore>()(
     }),
     {
       name: 'lingodeck-cards',
-      version: 1,
+      version: 2,
       migrate: (state, version) => {
+        const s = state as Record<string, unknown>;
         if (version === 0) {
           return {
-            ...(state as object),
+            ...s,
             decks: INITIAL_DECKS,
             lastUsedDeckId: null,
-          } as CardStore;
+            filters: { ...(s.filters as object), deckIds: [] },
+          } as unknown as CardStore;
+        }
+        if (version === 1) {
+          const filters = (s.filters ?? {}) as Record<string, unknown>;
+          const { deckId: _, ...rest } = filters;
+          return {
+            ...s,
+            filters: { ...rest, deckIds: [] },
+          } as unknown as CardStore;
         }
         return state as CardStore;
       },
@@ -248,7 +260,7 @@ export async function createCardOnBackend(
 ): Promise<VocabularyCard> {
   const temp = useCardStore.getState().addCard(data);
 
-  if (MOCK || !data.deckId) return temp;
+  if (MOCK) return temp;
 
   try {
     const real = await apiCreateCard(data.deckId, data);

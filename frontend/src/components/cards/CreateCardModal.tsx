@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCards } from '@/hooks/useCards';
+import { useCardStore, createCardOnBackend } from '@/store/useCardStore';
 import { useToast } from '@/components/ui/toast';
-import { createCardOnBackend } from '@/store/useCardStore';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import type { VocabularyCard } from '@/types/card';
 
 interface CreateCardModalProps {
@@ -27,10 +28,12 @@ const EMPTY_FORM = {
 
 export function CreateCardModal({ open, onOpenChange, editCard, deckId }: CreateCardModalProps) {
   const { updateCard } = useCards();
+  const decks = useCardStore((s) => s.decks);
   const { toast } = useToast();
   const isEdit = !!editCard;
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<typeof EMPTY_FORM>>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -42,12 +45,14 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
         transcription: editCard.transcription ?? '',
         tags: editCard.tags?.join(', ') ?? '',
       });
+      setSelectedDeckId(editCard.deckId ?? null);
     } else {
       setForm(EMPTY_FORM);
+      setSelectedDeckId(deckId ?? null);
     }
     setErrors({});
     setSubmitted(false);
-  }, [editCard, open]);
+  }, [editCard, open, deckId]);
 
   const validate = (f: typeof EMPTY_FORM) => {
     const e: Partial<typeof EMPTY_FORM> = {};
@@ -94,6 +99,7 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
         translation: form.translation.trim(),
         transcription: form.transcription.trim() || undefined,
         tags,
+        deckId: selectedDeckId ?? undefined,
       });
       toast({ title: 'Card updated', variant: 'success' });
     } else {
@@ -102,7 +108,7 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
         translation: form.translation.trim(),
         transcription: form.transcription.trim() || undefined,
         tags,
-        deckId,
+        deckId: selectedDeckId ?? undefined,
       });
       toast({ title: 'Card created', variant: 'success' });
     }
@@ -196,6 +202,36 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
                       placeholder="adjective, advanced (comma-separated)"
                     />
                   </div>
+
+                  {decks.length > 0 && (
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-[var(--foreground)]">
+                        Deck
+                      </label>
+                      <Select
+                        value={selectedDeckId ?? 'none'}
+                        onValueChange={(v) => setSelectedDeckId(v === 'none' ? null : v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No deck</SelectItem>
+                          {decks.map((deck) => (
+                            <SelectItem key={deck.id} value={deck.id}>
+                              <span className="flex items-center gap-2">
+                                <span
+                                  className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: deck.color }}
+                                />
+                                {deck.name}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="flex gap-3 pt-1">
                     <Dialog.Close asChild>

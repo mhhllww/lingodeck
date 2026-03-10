@@ -13,7 +13,7 @@ import {
     type RowSelectionState,
     type Column,
 } from '@tanstack/react-table';
-import {ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Trash2, Pencil, Plus} from 'lucide-react';
+import {ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Trash2, Pencil, Plus, Layers, Check, ChevronDown} from 'lucide-react';
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import {
     ContextMenuItem,
     ContextMenuSeparator
 } from '@/components/ui/context-menu';
+import {Popover, PopoverTrigger, PopoverContent} from '@/components/ui/popover';
 import {CreateCardModal} from '@/components/cards/CreateCardModal';
 import {useCards} from '@/hooks/useCards';
 import {useCardStore} from '@/store/useCardStore';
@@ -61,6 +62,7 @@ export function DictionaryTable() {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
     const [activeTags, setActiveTags] = useState<string[]>([]);
+    const [activeDeckIds, setActiveDeckIds] = useState<Set<string>>(new Set());
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [modalOpen, setModalOpen] = useState(false);
     const [editCard, setEditCard] = useState<VocabularyCard | undefined>();
@@ -70,10 +72,32 @@ export function DictionaryTable() {
         [allCards]
     );
 
-    const tagFilteredCards = useMemo(() => {
-        if (activeTags.length === 0) return allCards;
-        return allCards.filter((card) => activeTags.every((tag) => card.tags?.includes(tag)));
-    }, [allCards, activeTags]);
+    const toggleDeckFilter = useCallback((id: string) => {
+        setActiveDeckIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    }, []);
+
+    const filteredCards = useMemo(() => {
+        let cards = allCards;
+        if (activeDeckIds.size > 0) {
+            cards = cards.filter((c) =>
+                activeDeckIds.has('none') ? !c.deckId : c.deckId != null && activeDeckIds.has(c.deckId)
+            );
+            // If both "none" and specific decks selected, include both
+            if (activeDeckIds.has('none') && activeDeckIds.size > 1) {
+                cards = allCards.filter((c) =>
+                    !c.deckId || (c.deckId != null && activeDeckIds.has(c.deckId))
+                );
+            }
+        }
+        if (activeTags.length > 0) {
+            cards = cards.filter((card) => activeTags.every((tag) => card.tags?.includes(tag)));
+        }
+        return cards;
+    }, [allCards, activeTags, activeDeckIds]);
 
     const handleDelete = useCallback(
         (id: string, e: React.MouseEvent) => {
@@ -255,7 +279,7 @@ export function DictionaryTable() {
     );
 
     const table = useReactTable({
-        data: tagFilteredCards,
+        data: filteredCards,
         columns,
         state: {sorting, globalFilter, rowSelection},
         onSortingChange: setSorting,
@@ -276,7 +300,7 @@ export function DictionaryTable() {
     }, [table, deleteCard, toast]);
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6 h-[calc(100vh-12rem)]">
             {/* Toolbar */}
             {allCards.length > 0 && (
                 <div className="flex items-center justify-between gap-4">
@@ -297,16 +321,57 @@ export function DictionaryTable() {
                 </div>
             )}
 
-            {/* Tags + search badge */}
+            {/* Deck filter + Tags + search */}
             {allCards.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
                     <SearchPalette
                         value={globalFilter}
                         onChange={setGlobalFilter}
-                        totalCount={tagFilteredCards.length}
+                        totalCount={filteredCards.length}
                         filteredCount={table.getFilteredRowModel().rows.length}
                         disabled={modalOpen}
                     />
+                    {decks.length > 0 && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-md border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] transition-colors">
+                                    <Layers className="h-3.5 w-3.5 opacity-50" />
+                                    {activeDeckIds.size === 0
+                                        ? 'All decks'
+                                        : `${activeDeckIds.size} selected`}
+                                    <ChevronDown className="h-3 w-3 opacity-50" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" className="w-48 p-1">
+                                <button
+                                    className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
+                                    onClick={() => toggleDeckFilter('none')}
+                                >
+                                    <span className={`h-4 w-4 flex items-center justify-center rounded border ${activeDeckIds.has('none') ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
+                                        {activeDeckIds.has('none') && <Check className="h-3 w-3 text-white" />}
+                                    </span>
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-[var(--border)]" />
+                                    No deck
+                                </button>
+                                {decks.map((deck) => (
+                                    <button
+                                        key={deck.id}
+                                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
+                                        onClick={() => toggleDeckFilter(deck.id)}
+                                    >
+                                        <span className={`h-4 w-4 flex items-center justify-center rounded border ${activeDeckIds.has(deck.id) ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
+                                            {activeDeckIds.has(deck.id) && <Check className="h-3 w-3 text-white" />}
+                                        </span>
+                                        <span
+                                            className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                                            style={{ backgroundColor: deck.color }}
+                                        />
+                                        {deck.name}
+                                    </button>
+                                ))}
+                            </PopoverContent>
+                        </Popover>
+                    )}
                     {allTags.map((tag) => (
                         <Badge
                             key={tag}
@@ -317,10 +382,10 @@ export function DictionaryTable() {
                             {tag}
                         </Badge>
                     ))}
-                    {activeTags.length > 0 && (
+                    {(activeTags.length > 0 || activeDeckIds.size > 0) && (
                         <Badge
                             variant="outline"
-                            onClick={() => setActiveTags([])}
+                            onClick={() => { setActiveTags([]); setActiveDeckIds(new Set()); }}
                             className="cursor-pointer opacity-60 hover:opacity-100"
                         >
                             × clear
@@ -344,13 +409,13 @@ export function DictionaryTable() {
                     </Button>
                 </div>
             ) : (
-                <div className="rounded-lg border border-[var(--border)] overflow-hidden">
+                <div className="rounded-lg border border-[var(--border)] overflow-auto flex-1 min-h-0">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow
                                     key={headerGroup.id}
-                                    className="hover:bg-transparent border-b border-[var(--border)] bg-[var(--muted)]/40"
+                                    className="hover:bg-transparent border-b border-[var(--border)] bg-[var(--muted)] sticky top-0 z-10"
                                 >
                                     {headerGroup.headers.map((header) => (
                                         <TableHead

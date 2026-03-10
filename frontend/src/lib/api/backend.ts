@@ -128,12 +128,23 @@ export async function apiGetAllCards(): Promise<VocabularyCard[]> {
 }
 
 export async function apiCreateCard(
-  deckId: string,
+  deckId: string | undefined,
   data: Omit<VocabularyCard, 'id' | 'createdAt' | 'deckId'>,
 ): Promise<VocabularyCard> {
-  const c = await request<BackendCard>(`/api/decks/${deckId}/cards`, {
+  const body: Record<string, unknown> = {
+    front: data.word,
+    back: data.translation,
+    transcription: data.transcription ?? '',
+    part_of_speech: data.partOfSpeech ?? [],
+    definitions: data.definitions ?? [],
+    examples: data.examples ?? [],
+    synonyms: data.synonyms ?? [],
+    tags: data.tags ?? [],
+  };
+  if (deckId) body.deck_id = Number(deckId);
+  const c = await request<BackendCard>('/api/cards', {
     method: 'POST',
-    body: JSON.stringify({ front: data.word, back: data.translation }),
+    body: JSON.stringify(body),
   });
   return mapCard(c);
 }
@@ -145,6 +156,12 @@ export async function apiUpdateCard(
   const body: Record<string, unknown> = {};
   if (data.word !== undefined) body.front = data.word;
   if (data.translation !== undefined) body.back = data.translation;
+  if (data.transcription !== undefined) body.transcription = data.transcription;
+  if (data.partOfSpeech !== undefined) body.part_of_speech = data.partOfSpeech;
+  if (data.definitions !== undefined) body.definitions = data.definitions;
+  if (data.examples !== undefined) body.examples = data.examples;
+  if (data.synonyms !== undefined) body.synonyms = data.synonyms;
+  if (data.tags !== undefined) body.tags = data.tags;
   if (data.deckId !== undefined) body.deck_id = Number(data.deckId);
   if (data.timesCorrect !== undefined) body.times_correct = data.timesCorrect;
   if (data.timesIncorrect !== undefined) body.times_incorrect = data.timesIncorrect;
