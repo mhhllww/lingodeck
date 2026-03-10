@@ -60,7 +60,8 @@ func (h *CardHandler) ListAllCards(w http.ResponseWriter, r *http.Request) {
 	}
 	query := r.URL.Query().Get("q")
 
-	cards, err := h.svc.ListCards(r.Context(), deckID, query)
+	userID, _ := getUserID(r)
+	cards, err := h.svc.ListCards(r.Context(), userID, deckID, query)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to list cards")
 		return
@@ -117,6 +118,8 @@ func (h *CardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.DeckID = &deckID
+	userID, _ := getUserID(r)
+	c.UserID = &userID
 
 	if err := h.svc.CreateCard(r.Context(), &c); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create card")
@@ -143,6 +146,8 @@ func (h *CardHandler) CreateCardFlat(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "deck_id is required")
 		return
 	}
+	userID, _ := getUserID(r)
+	c.UserID = &userID
 
 	if err := h.svc.CreateCard(r.Context(), &c); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create card")

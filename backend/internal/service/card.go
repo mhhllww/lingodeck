@@ -3,19 +3,20 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/mhlw/lingodeck/internal/domain"
 )
 
 type CardService interface {
 	ListByDeck(ctx context.Context, deckID int) ([]domain.Card, error)
-	ListCards(ctx context.Context, deckID *int, query string) ([]domain.Card, error)
+	ListCards(ctx context.Context, userID uuid.UUID, deckID *int, query string) ([]domain.Card, error)
 	GetCard(ctx context.Context, id int) (*domain.Card, error)
 	CreateCard(ctx context.Context, c *domain.Card) error
 	UpdateCard(ctx context.Context, c *domain.Card) error
 	DeleteCard(ctx context.Context, id int) error
 	SaveStudyResults(ctx context.Context, results []domain.StudyCardResult) error
 
-	ListDecks(ctx context.Context) ([]domain.Deck, error)
+	ListDecks(ctx context.Context, userID uuid.UUID) ([]domain.Deck, error)
 	GetDeck(ctx context.Context, id int) (*domain.Deck, error)
 	CreateDeck(ctx context.Context, d *domain.Deck) error
 	UpdateDeck(ctx context.Context, d *domain.Deck) error
@@ -36,8 +37,8 @@ func (s *cardService) ListByDeck(ctx context.Context, deckID int) ([]domain.Card
 	return s.cards.ListByDeck(ctx, deckID)
 }
 
-func (s *cardService) ListCards(ctx context.Context, deckID *int, query string) ([]domain.Card, error) {
-	return s.cards.List(ctx, deckID, query)
+func (s *cardService) ListCards(ctx context.Context, userID uuid.UUID, deckID *int, query string) ([]domain.Card, error) {
+	return s.cards.List(ctx, userID, deckID, query)
 }
 
 func (s *cardService) GetCard(ctx context.Context, id int) (*domain.Card, error) {
@@ -60,8 +61,8 @@ func (s *cardService) SaveStudyResults(ctx context.Context, results []domain.Stu
 	return s.cards.BulkUpdateStudyStats(ctx, results)
 }
 
-func (s *cardService) ListDecks(ctx context.Context) ([]domain.Deck, error) {
-	return s.decks.List(ctx)
+func (s *cardService) ListDecks(ctx context.Context, userID uuid.UUID) ([]domain.Deck, error) {
+	return s.decks.List(ctx, userID)
 }
 
 func (s *cardService) GetDeck(ctx context.Context, id int) (*domain.Deck, error) {

@@ -1,7 +1,8 @@
 import type { WordResponse } from '@/types/dictionary';
+import { fetchWithAuth } from './fetchWithAuth';
 
 export async function fetchWordDefinition(word: string): Promise<WordResponse[]> {
-  const response = await fetch(`/api/dictionary/search?q=${encodeURIComponent(word)}`);
+  const response = await fetchWithAuth(`/api/dictionary/search?q=${encodeURIComponent(word)}`);
 
   if (response.status === 404) {
     return [];

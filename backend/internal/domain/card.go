@@ -3,11 +3,14 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Card struct {
 	ID             int        `json:"id"`
 	DeckID         *int       `json:"deck_id"`
+	UserID         *uuid.UUID `json:"user_id,omitempty"`
 	Front          string     `json:"front"`
 	Back           string     `json:"back"`
 	Transcription  string     `json:"transcription"`
@@ -31,7 +34,7 @@ type StudyCardResult struct {
 
 type CardRepository interface {
 	ListByDeck(ctx context.Context, deckID int) ([]Card, error)
-	List(ctx context.Context, deckID *int, query string) ([]Card, error)
+	List(ctx context.Context, userID uuid.UUID, deckID *int, query string) ([]Card, error)
 	GetByID(ctx context.Context, id int) (*Card, error)
 	Create(ctx context.Context, c *Card) error
 	Update(ctx context.Context, c *Card) error

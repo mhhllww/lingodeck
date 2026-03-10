@@ -64,6 +64,7 @@ func main() {
 	cardRepo := postgres.NewCardRepo(pool)
 	deckRepo := postgres.NewDeckRepo(pool)
 	userRepo := postgres.NewUserRepo(pool)
+	dailyRepo := postgres.NewDailyRepo(pool)
 
 	// Services
 	groqSvc := service.NewGroqService(cfg.GroqAPIKey)
@@ -72,9 +73,10 @@ func main() {
 	cardSvc := service.NewCardService(cardRepo, deckRepo)
 	emailSvc := service.NewEmailService(cfg.ResendAPIKey, cfg.EmailFrom, cfg.AppURL)
 	authSvc := service.NewAuthService(userRepo, userRepo, emailSvc, cfg.JWTSecret, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)
+	dailySvc := service.NewDailyService(dailyRepo, deckRepo, cardRepo, dictSvc, groqSvc)
 
 	// Server
-	handler := server.New(dictSvc, transSvc, cardSvc, authSvc, cfg.JWTSecureCookie)
+	handler := server.New(dictSvc, transSvc, cardSvc, authSvc, dailySvc, cfg.JWTSecureCookie)
 	srv := &http.Server{
 		Addr:         ":" + cfg.Port,
 		Handler:      handler,

@@ -25,7 +25,8 @@ func NewDeckHandler(svc service.CardService) *DeckHandler {
 // @Failure 500 {object} errorBody
 // @Router /api/decks [get]
 func (h *DeckHandler) ListDecks(w http.ResponseWriter, r *http.Request) {
-	decks, err := h.svc.ListDecks(r.Context())
+	userID, _ := getUserID(r)
+	decks, err := h.svc.ListDecks(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to list decks")
 		return
@@ -53,6 +54,9 @@ func (h *DeckHandler) CreateDeck(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "name is required")
 		return
 	}
+
+	userID, _ := getUserID(r)
+	d.UserID = &userID
 
 	if err := h.svc.CreateDeck(r.Context(), &d); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create deck")

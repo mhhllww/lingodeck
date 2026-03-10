@@ -13,9 +13,10 @@ interface SaveCardButtonProps {
   cardData: Omit<VocabularyCard, 'id' | 'createdAt' | 'tags' | 'deckId'>;
   suggestedTags: string[];
   onSaved?: (deckName?: string) => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function SaveCardButton({ cardData, suggestedTags, onSaved }: SaveCardButtonProps) {
+export function SaveCardButton({ cardData, suggestedTags, onSaved, size = 'lg' as const }: SaveCardButtonProps) {
   const { cards, deleteCard, setLastUsedDeckId, decks } = useCardStore();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -58,7 +59,7 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved }: SaveCardBut
       : undefined;
 
     return (
-      <Button variant="outline" className="w-full gap-2" size="lg" disabled>
+      <Button variant="outline" className="w-full gap-2" size={size} disabled>
         <BookmarkCheck className="h-4 w-4" />
         {deckName ? `Saved in "${deckName}"` : 'Saved ✓'}
       </Button>
@@ -68,7 +69,7 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved }: SaveCardBut
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button className="w-full gap-2" size="lg">
+        <Button className="w-full gap-2" size={size}>
           <BookmarkPlus className="h-4 w-4" />
           Save to Cards
         </Button>

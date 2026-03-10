@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mhlw/lingodeck/internal/domain"
@@ -66,10 +67,10 @@ func (r *CardRepo) ListByDeck(ctx context.Context, deckID int) ([]domain.Card, e
 	return scanCards(rows)
 }
 
-func (r *CardRepo) List(ctx context.Context, deckID *int, query string) ([]domain.Card, error) {
-	var conditions []string
-	var args []any
-	argIdx := 1
+func (r *CardRepo) List(ctx context.Context, userID uuid.UUID, deckID *int, query string) ([]domain.Card, error) {
+	conditions := []string{"user_id = $1"}
+	args := []any{userID}
+	argIdx := 2
 
 	if deckID != nil {
 		conditions = append(conditions, fmt.Sprintf("deck_id = $%d", argIdx))
@@ -81,11 +82,7 @@ func (r *CardRepo) List(ctx context.Context, deckID *int, query string) ([]domai
 		args = append(args, "%"+query+"%")
 	}
 
-	sql := `SELECT ` + cardColumns + ` FROM cards`
-	if len(conditions) > 0 {
-		sql += " WHERE " + strings.Join(conditions, " AND ")
-	}
-	sql += " ORDER BY created_at"
+	sql := `SELECT ` + cardColumns + ` FROM cards WHERE ` + strings.Join(conditions, " AND ") + ` ORDER BY created_at`
 
 	rows, err := r.db.Query(ctx, sql, args...)
 	if err != nil {
@@ -111,12 +108,12 @@ func (r *CardRepo) GetByID(ctx context.Context, id int) (*domain.Card, error) {
 func (r *CardRepo) Create(ctx context.Context, c *domain.Card) error {
 	return r.db.QueryRow(ctx,
 		`INSERT INTO cards (deck_id, front, back, transcription, part_of_speech, definitions,
-		 examples, synonyms, antonyms, tags)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		 examples, synonyms, antonyms, tags, user_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		 RETURNING id, times_correct, times_incorrect, last_studied_at, created_at, updated_at`,
 		c.DeckID, c.Front, c.Back, c.Transcription,
 		emptyIfNil(c.PartOfSpeech), emptyIfNil(c.Definitions), emptyIfNil(c.Examples),
-		emptyIfNil(c.Synonyms), emptyIfNil(c.Antonyms), emptyIfNil(c.Tags)).
+		emptyIfNil(c.Synonyms), emptyIfNil(c.Antonyms), emptyIfNil(c.Tags), c.UserID).
 		Scan(&c.ID, &c.TimesCorrect, &c.TimesIncorrect, &c.LastStudiedAt, &c.CreatedAt, &c.UpdatedAt)
 }
 

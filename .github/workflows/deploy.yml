@@ -36,15 +36,16 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: deploy
           key: ${{ secrets.SSH_KEY }}
+          envs: DATABASE_URL
           script: |
             cp /home/deploy/backend/server /home/deploy/server
-            cp -r /home/deploy/backend/migrations /home/deploy/migrations
+            mkdir -p /home/deploy/migrations
+            cp -r /home/deploy/backend/migrations/* /home/deploy/migrations/
             rm -rf /home/deploy/backend
-
-            # Run migrations before starting the server
-            migrate -path /home/deploy/migrations -database "$DATABASE_URL" up
-
+            gomigrate -path /home/deploy/migrations -database "$DATABASE_URL" up
             sudo systemctl start lingodeck
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   deploy-frontend:
     runs-on: ubuntu-latest
