@@ -23,38 +23,53 @@ type TranslatorService interface {
 
 type translatorService struct {
 	repo       domain.TranslationRepository
-	apiKey     string
+	groqKey    string
 	httpClient *http.Client
 }
 
-func NewTranslatorService(repo domain.TranslationRepository, deeplAPIKey string) TranslatorService {
+func NewTranslatorService(repo domain.TranslationRepository, groqAPIKey string) TranslatorService {
 	return &translatorService{
-		repo:   repo,
-		apiKey: deeplAPIKey,
+		repo:    repo,
+		groqKey: groqAPIKey,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 15 * time.Second,
 		},
 	}
 }
 
 var (
-	ErrDeepLUnauthorized = errors.New("invalid DeepL API key")
-	ErrDeepLRateLimit    = errors.New("DeepL API rate limit exceeded, try again later")
-	ErrDeepLQuotaExceeded = errors.New("DeepL API translation quota exceeded")
-	ErrDeepLUnavailable  = errors.New("DeepL API is temporarily unavailable")
+	ErrTranslationFailed = errors.New("translation failed")
 )
 
-type deeplRequest struct {
-	Text       []string `json:"text"`
-	TargetLang string   `json:"target_lang"`
-	SourceLang string   `json:"source_lang,omitempty"`
-}
+const translatePrompt = `Translate the following text from %s to %s. Return ONLY the translated text, nothing else. No quotes, no explanation, no extra formatting.
 
-type deeplResponse struct {
-	Translations []struct {
-		Text string `json:"text"`
-	} `json:"translations"`
-	Message string `json:"message"`
+Text: %s`
+
+func langName(code string) string {
+	switch strings.ToUpper(code) {
+	case "EN":
+		return "English"
+	case "RU":
+		return "Russian"
+	case "DE":
+		return "German"
+	case "FR":
+		return "French"
+	case "ES":
+		return "Spanish"
+	case "IT":
+		return "Italian"
+	case "PT":
+		return "Portuguese"
+	case "JA":
+		return "Japanese"
+	case "ZH":
+		return "Chinese"
+	case "KO":
+		return "Korean"
+	default:
+		return code
+	}
 }
 
 func (s *translatorService) Translate(ctx context.Context, text, sourceLang, targetLang string) (*domain.Translation, error) {
@@ -67,8 +82,7 @@ func (s *translatorService) Translate(ctx context.Context, text, sourceLang, tar
 		slog.Warn("cache lookup failed", "error", err)
 	}
 
-	// Call DeepL API
-	translatedText, err := s.callDeepL(ctx, text, sourceLang, targetLang)
+	translatedText, err := s.callGroq(ctx, text, sourceLang, targetLang)
 	if err != nil {
 		return nil, err
 	}
@@ -85,64 +99,53 @@ func (s *translatorService) Translate(ctx context.Context, text, sourceLang, tar
 	return t, nil
 }
 
-func (s *translatorService) callDeepL(ctx context.Context, text, sourceLang, targetLang string) (string, error) {
-	body := deeplRequest{
-		Text:       []string{text},
-		TargetLang: strings.ToUpper(targetLang),
-	}
-	if sourceLang != "" {
-		body.SourceLang = strings.ToUpper(sourceLang)
+func (s *translatorService) callGroq(ctx context.Context, text, sourceLang, targetLang string) (string, error) {
+	prompt := fmt.Sprintf(translatePrompt, langName(sourceLang), langName(targetLang), text)
+
+	reqBody := groqRequest{
+		Model: groqModel,
+		Messages: []groqMessage{
+			{Role: "user", Content: prompt},
+		},
 	}
 
-	jsonBody, err := json.Marshal(body)
+	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", fmt.Errorf("marshaling request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api-free.deepl.com/v2/translate", bytes.NewReader(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, groqAPIURL, bytes.NewReader(jsonBody))
 	if err != nil {
 		return "", fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("Authorization", "DeepL-Auth-Key "+s.apiKey)
+	req.Header.Set("Authorization", "Bearer "+s.groqKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("calling DeepL API: %w", err)
+		return "", fmt.Errorf("calling Groq API: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("reading DeepL response: %w", err)
+		return "", fmt.Errorf("reading Groq response: %w", err)
 	}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-		// success, handled below
-	case http.StatusForbidden, http.StatusUnauthorized:
-		return "", ErrDeepLUnauthorized
-	case http.StatusTooManyRequests:
-		return "", ErrDeepLRateLimit
-	case 456: // DeepL quota exceeded
-		return "", ErrDeepLQuotaExceeded
-	default:
-		if resp.StatusCode >= 500 {
-			return "", ErrDeepLUnavailable
-		}
-		return "", fmt.Errorf("DeepL API error (status %d): %s", resp.StatusCode, string(respBody))
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Groq API error (status %d): %s", resp.StatusCode, string(respBody))
 	}
 
-	var deeplResp deeplResponse
-	if err := json.Unmarshal(respBody, &deeplResp); err != nil {
-		return "", fmt.Errorf("decoding DeepL response: %w", err)
+	var groqResp groqResponse
+	if err := json.Unmarshal(respBody, &groqResp); err != nil {
+		return "", fmt.Errorf("decoding Groq response: %w", err)
 	}
 
-	if len(deeplResp.Translations) == 0 {
-		return "", fmt.Errorf("DeepL returned no translations")
+	if len(groqResp.Choices) == 0 {
+		return "", fmt.Errorf("Groq returned no choices")
 	}
 
-	return deeplResp.Translations[0].Text, nil
+	return strings.TrimSpace(groqResp.Choices[0].Message.Content), nil
 }
 
 func (s *translatorService) GetHistory(ctx context.Context, limit int) ([]domain.Translation, error) {

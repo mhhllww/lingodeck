@@ -69,7 +69,7 @@ func main() {
 	// Services
 	groqSvc := service.NewGroqService(cfg.GroqAPIKey)
 	dictSvc := service.NewDictionaryService(wordRepo, groqSvc)
-	transSvc := service.NewTranslatorService(translationRepo, cfg.DeepLAPIKey)
+	transSvc := service.NewTranslatorService(translationRepo, cfg.GroqAPIKey)
 	cardSvc := service.NewCardService(cardRepo, deckRepo)
 	emailSvc := service.NewEmailService(cfg.ResendAPIKey, cfg.EmailFrom, cfg.AppURL)
 	authSvc := service.NewAuthService(userRepo, userRepo, emailSvc, cfg.JWTSecret, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL)

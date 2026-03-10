@@ -9,8 +9,7 @@ import (
 type Config struct {
 	Port        string
 	DatabaseURL string
-	DeepLAPIKey string
-	GroqAPIKey  string
+	GroqAPIKey string
 
 	JWTSecret          string
 	JWTSecureCookie    bool
@@ -34,8 +33,7 @@ func Load() *Config {
 	return &Config{
 		Port:        port,
 		DatabaseURL: os.Getenv("DATABASE_URL"),
-		DeepLAPIKey: os.Getenv("DEEPL_API_KEY"),
-		GroqAPIKey:  os.Getenv("GROQ_API_KEY"),
+		GroqAPIKey: os.Getenv("GROQ_API_KEY"),
 
 		JWTSecret:          os.Getenv("JWT_SECRET"),
 		JWTSecureCookie:    os.Getenv("JWT_SECURE_COOKIE") == "true",
