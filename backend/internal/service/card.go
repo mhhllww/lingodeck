@@ -22,6 +22,7 @@ type CardService interface {
 	UpdateDeck(ctx context.Context, d *domain.Deck) error
 	DeleteDeck(ctx context.Context, id int) error
 	DetachCardsFromDeck(ctx context.Context, deckID int) error
+	DeleteCardsByDeck(ctx context.Context, deckID int) error
 }
 
 type cardService struct {
@@ -83,4 +84,8 @@ func (s *cardService) DeleteDeck(ctx context.Context, id int) error {
 
 func (s *cardService) DetachCardsFromDeck(ctx context.Context, deckID int) error {
 	return s.cards.DetachFromDeck(ctx, deckID)
+}
+
+func (s *cardService) DeleteCardsByDeck(ctx context.Context, deckID int) error {
+	return s.cards.DeleteByDeck(ctx, deckID)
 }

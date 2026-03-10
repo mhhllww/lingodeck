@@ -41,4 +41,5 @@ type CardRepository interface {
 	Delete(ctx context.Context, id int) error
 	BulkUpdateStudyStats(ctx context.Context, results []StudyCardResult) error
 	DetachFromDeck(ctx context.Context, deckID int) error
+	DeleteByDeck(ctx context.Context, deckID int) error
 }
