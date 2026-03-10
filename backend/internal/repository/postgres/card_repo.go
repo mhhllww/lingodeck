@@ -121,11 +121,11 @@ func (r *CardRepo) Update(ctx context.Context, c *domain.Card) error {
 	return r.db.QueryRow(ctx,
 		`UPDATE cards SET front = $1, back = $2, transcription = $3, part_of_speech = $4,
 		 definitions = $5, examples = $6, synonyms = $7, antonyms = $8, tags = $9,
-		 updated_at = NOW()
-		 WHERE id = $10 RETURNING updated_at`,
+		 deck_id = $10, updated_at = NOW()
+		 WHERE id = $11 RETURNING updated_at`,
 		c.Front, c.Back, c.Transcription,
 		emptyIfNil(c.PartOfSpeech), emptyIfNil(c.Definitions), emptyIfNil(c.Examples),
-		emptyIfNil(c.Synonyms), emptyIfNil(c.Antonyms), emptyIfNil(c.Tags), c.ID).
+		emptyIfNil(c.Synonyms), emptyIfNil(c.Antonyms), emptyIfNil(c.Tags), c.DeckID, c.ID).
 		Scan(&c.UpdatedAt)
 }
 
