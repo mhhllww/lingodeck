@@ -116,7 +116,7 @@ func (h *CardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	c.DeckID = deckID
+	c.DeckID = &deckID
 
 	if err := h.svc.CreateCard(r.Context(), &c); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create card")
@@ -139,7 +139,7 @@ func (h *CardHandler) CreateCardFlat(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	if c.DeckID == 0 {
+	if c.DeckID == nil || *c.DeckID == 0 {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "deck_id is required")
 		return
 	}

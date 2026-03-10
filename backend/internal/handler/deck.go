@@ -135,6 +135,16 @@ func (h *DeckHandler) DeleteDeck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	keepCards := r.URL.Query().Get("keep_cards") == "true"
+
+	if keepCards {
+		// Detach cards from deck before deleting
+		if err := h.svc.DetachCardsFromDeck(r.Context(), id); err != nil {
+			respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to detach cards")
+			return
+		}
+	}
+
 	if err := h.svc.DeleteDeck(r.Context(), id); err != nil {
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to delete deck")
 		return

@@ -161,6 +161,11 @@ func (r *CardRepo) BulkUpdateStudyStats(ctx context.Context, results []domain.St
 	return nil
 }
 
+func (r *CardRepo) DetachFromDeck(ctx context.Context, deckID int) error {
+	_, err := r.db.Exec(ctx, `UPDATE cards SET deck_id = NULL WHERE deck_id = $1`, deckID)
+	return err
+}
+
 func emptyIfNil(s []string) []string {
 	if s == nil {
 		return []string{}

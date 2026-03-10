@@ -8,7 +8,7 @@ import (
 
 type CardResponse struct {
 	ID             string   `json:"id"`
-	DeckID         string   `json:"deck_id"`
+	DeckID         *string  `json:"deck_id"`
 	Front          string   `json:"front"`
 	Back           string   `json:"back"`
 	Transcription  string   `json:"transcription"`
@@ -36,6 +36,14 @@ type DeckResponse struct {
 	UpdatedAt   string   `json:"updated_at"`
 }
 
+func intPtrToStringPtr(p *int) *string {
+	if p == nil {
+		return nil
+	}
+	s := strconv.Itoa(*p)
+	return &s
+}
+
 func emptyIfNil(s []string) []string {
 	if s == nil {
 		return []string{}
@@ -51,7 +59,7 @@ func toCardResponse(c domain.Card) CardResponse {
 	}
 	return CardResponse{
 		ID:             strconv.Itoa(c.ID),
-		DeckID:         strconv.Itoa(c.DeckID),
+		DeckID:         intPtrToStringPtr(c.DeckID),
 		Front:          c.Front,
 		Back:           c.Back,
 		Transcription:  c.Transcription,
