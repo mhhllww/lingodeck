@@ -9,7 +9,7 @@ import (
 
 type Card struct {
 	ID             int        `json:"id"`
-	DeckID         int        `json:"deck_id"`
+	DeckID         *int       `json:"deck_id"`
 	UserID         *uuid.UUID `json:"user_id,omitempty"`
 	Front          string     `json:"front"`
 	Back           string     `json:"back"`
@@ -40,4 +40,5 @@ type CardRepository interface {
 	Update(ctx context.Context, c *Card) error
 	Delete(ctx context.Context, id int) error
 	BulkUpdateStudyStats(ctx context.Context, results []StudyCardResult) error
+	DetachFromDeck(ctx context.Context, deckID int) error
 }

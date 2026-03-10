@@ -4,7 +4,7 @@ import type { VocabularyCard, Deck, CardFilters } from '@/types/card';
 import { generateId } from '@/lib/utils';
 import {
   apiGetDecks,
-  apiGetDeckCards,
+  apiGetAllCards,
   apiCreateDeck,
   apiUpdateDeck,
   apiDeleteDeck,
@@ -69,7 +69,7 @@ interface CardStore {
   lastUsedDeckId: string | null;
   addDeck: (data: Omit<Deck, 'id' | 'createdAt'>) => Deck;
   updateDeck: (id: string, data: Partial<Omit<Deck, 'id' | 'createdAt'>>) => void;
-  deleteDeck: (id: string) => void;
+  deleteDeck: (id: string, keepCards?: boolean) => void;
   setLastUsedDeckId: (id: string | null) => void;
 }
 
@@ -178,16 +178,21 @@ export const useCardStore = create<CardStore>()(
         set((state) => ({
           decks: state.decks.map((d) => (d.id === id ? { ...d, ...data } : d)),
         }));
-        if (!MOCK && data.name) apiUpdateDeck(id, data.name).catch(console.error);
+        if (!MOCK && /^\d+$/.test(id)) {
+          const deck = get().decks.find((d) => d.id === id);
+          if (deck) {
+            apiUpdateDeck(id, { name: deck.name, color: deck.color }).catch(console.error);
+          }
+        }
       },
-      deleteDeck: (id) => {
+      deleteDeck: (id, keepCards = false) => {
         set((state) => ({
           decks: state.decks.filter((d) => d.id !== id),
-          cards: state.cards.map((c) =>
-            c.deckId === id ? { ...c, deckId: undefined } : c
-          ),
+          cards: keepCards
+            ? state.cards.map((c) => c.deckId === id ? { ...c, deckId: undefined } : c)
+            : state.cards.filter((c) => c.deckId !== id),
         }));
-        if (!MOCK) apiDeleteDeck(id).catch(console.error);
+        if (!MOCK) apiDeleteDeck(id, keepCards).catch(console.error);
       },
       setLastUsedDeckId: (id) => set({ lastUsedDeckId: id }),
     }),
@@ -223,8 +228,7 @@ export async function createDeckOnBackend(
   if (MOCK) return temp;
 
   try {
-    console.log('try to create deck')
-    const real = await apiCreateDeck(data.name);
+    const real = await apiCreateDeck(data.name, data.color);
     const finalDeck: Deck = { ...real, color: data.color, tags: data.tags };
     useCardStore.setState((state) => ({
       decks: state.decks.map((d) => (d.id === temp.id ? finalDeck : d)),
@@ -262,10 +266,6 @@ export async function createCardOnBackend(
  * Load all decks and cards from the real backend into the store.
  */
 export async function loadFromBackend(): Promise<void> {
-  const decks = await apiGetDecks();
-  const cardArrays = await Promise.all(
-    decks.map((d) => apiGetDeckCards(d.id))
-  );
-  const cards = cardArrays.flat();
+  const [decks, cards] = await Promise.all([apiGetDecks(), apiGetAllCards()]);
   useCardStore.setState({ decks, cards });
 }

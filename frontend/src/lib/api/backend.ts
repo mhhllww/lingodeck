@@ -4,7 +4,7 @@ import type { VocabularyCard, Deck } from '@/types/card';
 
 interface BackendCard {
   id: number;
-  deck_id: number;
+  deck_id: number | null;
   front: string;
   back: string;
   example?: string;
@@ -41,7 +41,7 @@ export function mapCard(c: BackendCard): VocabularyCard {
   const pos = c.part_of_speech;
   return {
     id: String(c.id),
-    deckId: String(c.deck_id),
+    deckId: c.deck_id != null ? String(c.deck_id) : undefined,
     word: c.front,
     translation: c.back,
     transcription: c.transcription,
@@ -91,30 +91,39 @@ export async function apiGetDecks(): Promise<Deck[]> {
   return data.map((d, i) => mapDeck(d, i));
 }
 
-export async function apiCreateDeck(name: string): Promise<Deck> {
+export async function apiCreateDeck(name: string, color?: string): Promise<Deck> {
   const d = await request<BackendDeck>('/api/decks', {
     method: 'POST',
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, color }),
   });
   return mapDeck(d);
 }
 
-export async function apiUpdateDeck(id: string, name: string): Promise<Deck> {
+export async function apiUpdateDeck(
+  id: string,
+  data: { name?: string; color?: string },
+): Promise<Deck> {
   const d = await request<BackendDeck>(`/api/decks/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ name }),
+    body: JSON.stringify(data),
   });
   return mapDeck(d);
 }
 
-export async function apiDeleteDeck(id: string): Promise<void> {
-  await request<void>(`/api/decks/${id}`, { method: 'DELETE' });
+export async function apiDeleteDeck(id: string, keepCards = false): Promise<void> {
+  const qs = keepCards ? '?keep_cards=true' : '';
+  await request<void>(`/api/decks/${id}${qs}`, { method: 'DELETE' });
 }
 
 // ── Cards ─────────────────────────────────────────────────
 
 export async function apiGetDeckCards(deckId: string): Promise<VocabularyCard[]> {
   const data = await request<BackendCard[]>(`/api/decks/${deckId}/cards`);
+  return data.map(mapCard);
+}
+
+export async function apiGetAllCards(): Promise<VocabularyCard[]> {
+  const data = await request<BackendCard[]>('/api/cards');
   return data.map(mapCard);
 }
 

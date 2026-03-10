@@ -117,7 +117,7 @@ func (h *CardHandler) CreateCard(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	c.DeckID = deckID
+	c.DeckID = &deckID
 	userID, _ := getUserID(r)
 	c.UserID = &userID
 
@@ -142,7 +142,7 @@ func (h *CardHandler) CreateCardFlat(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "invalid request body")
 		return
 	}
-	if c.DeckID == 0 {
+	if c.DeckID == nil || *c.DeckID == 0 {
 		respondError(w, http.StatusBadRequest, "BAD_REQUEST", "deck_id is required")
 		return
 	}

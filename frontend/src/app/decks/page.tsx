@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Layers, X, BookOpen } from 'lucide-react';
+import { Plus, Layers, X, BookOpen, Trash2, BookMarked } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ function DeckCard({
   const router = useRouter();
   const { deleteDeck, updateDeck } = useCardStore();
   const [previewColor, setPreviewColor] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const displayColor = previewColor ?? deck.color;
 
@@ -60,7 +62,11 @@ function DeckCard({
             className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
             onClick={(e) => {
               e.stopPropagation();
-              deleteDeck(deck.id);
+              if (cardCount > 0) {
+                setDeleteOpen(true);
+              } else {
+                deleteDeck(deck.id, false);
+              }
             }}
             title="Delete deck"
           >
@@ -98,6 +104,78 @@ function DeckCard({
           Study
         </Button>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AnimatePresence>
+          {deleteOpen && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </Dialog.Overlay>
+              <Dialog.Content asChild>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--border)] bg-[var(--background)] p-6 shadow-xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Dialog.Title className="text-lg font-semibold text-[var(--foreground)] mb-2">
+                    Delete &quot;{deck.name}&quot;?
+                  </Dialog.Title>
+                  <p className="text-sm text-[var(--muted-foreground)] mb-5">
+                    This deck has {cardCount} {cardCount === 1 ? 'card' : 'cards'}. What would you like to do?
+                  </p>
+                  <Dialog.Close asChild>
+                    <button
+                      className="absolute right-3 top-3 rounded-md p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Dialog.Close>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-2 justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteDeck(deck.id, false);
+                        setDeleteOpen(false);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete all
+                    </Button>
+                    {cardCount > 0 && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 gap-2 justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDeck(deck.id, true);
+                          setDeleteOpen(false);
+                        }}
+                      >
+                        <BookMarked className="h-4 w-4" />
+                        Keep cards
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
     </motion.div>
   );
 }
