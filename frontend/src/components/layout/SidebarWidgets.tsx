@@ -67,7 +67,7 @@ function WordOfTheDayWidget() {
         size="sm"
         cardData={{
           word: data.word,
-          translation: '',
+          translation: data.translation,
           transcription: data.transcription,
           partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
           definitions: data.definition ? [data.definition] : undefined,
