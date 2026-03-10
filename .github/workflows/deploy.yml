@@ -39,8 +39,8 @@ jobs:
           envs: DATABASE_URL
           script: |
             cp /home/deploy/backend/server /home/deploy/server
-            mkdir -p /home/deploy/migrations
-            cp -r /home/deploy/backend/migrations/* /home/deploy/migrations/
+            rm -rf /home/deploy/migrations
+            cp -r /home/deploy/backend/migrations /home/deploy/migrations
             rm -rf /home/deploy/backend
             gomigrate -path /home/deploy/migrations -database "$DATABASE_URL" up
             sudo systemctl start lingodeck
