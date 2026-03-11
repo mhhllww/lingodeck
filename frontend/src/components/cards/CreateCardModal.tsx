@@ -6,10 +6,10 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DeckPickerDropdown } from '@/components/ui/deck-filter-dropdown';
 import { useCards } from '@/hooks/useCards';
 import { useCardStore, createCardOnBackend } from '@/store/useCardStore';
 import { useToast } from '@/components/ui/toast';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import type { VocabularyCard } from '@/types/card';
 
 interface CreateCardModalProps {
@@ -208,28 +208,11 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
                       <label className="text-sm font-medium text-[var(--foreground)]">
                         Deck
                       </label>
-                      <Select
-                        value={selectedDeckId ?? 'none'}
-                        onValueChange={(v) => setSelectedDeckId(v === 'none' ? null : v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No deck</SelectItem>
-                          {decks.map((deck) => (
-                            <SelectItem key={deck.id} value={deck.id}>
-                              <span className="flex items-center gap-2">
-                                <span
-                                  className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                                  style={{ backgroundColor: deck.color }}
-                                />
-                                {deck.name}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <DeckPickerDropdown
+                        decks={decks}
+                        selectedId={selectedDeckId}
+                        onSelect={setSelectedDeckId}
+                      />
                     </div>
                   )}
 
