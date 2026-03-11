@@ -13,7 +13,7 @@ import {
     type RowSelectionState,
     type Column,
 } from '@tanstack/react-table';
-import {ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Trash2, Pencil, Plus} from 'lucide-react';
+import {ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Trash2, Pencil, Plus, Layers, Check, ChevronDown, Volume2} from 'lucide-react';
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import {
 import {DeckFilterDropdown} from '@/components/ui/deck-filter-dropdown';
 import {CreateCardModal} from '@/components/cards/CreateCardModal';
 import {useCards} from '@/hooks/useCards';
+import {useSpeech} from '@/hooks/useSpeech';
 import {useCardStore} from '@/store/useCardStore';
 import {useToast} from '@/components/ui/toast';
 import type {VocabularyCard} from '@/types/card';
@@ -55,6 +56,7 @@ function SortHeader({label, column}: { label: string; column: Column<VocabularyC
 
 export function DictionaryTable() {
     const {allCards, deleteCard} = useCards();
+    const {speak} = useSpeech();
     const decks = useCardStore((s) => s.decks);
     const {toast} = useToast();
     const router = useRouter();
@@ -157,13 +159,24 @@ export function DictionaryTable() {
             columnHelper.accessor('word', {
                 header: ({column}) => <SortHeader label="Word" column={column}/>,
                 cell: ({row}) => (
-                    <div>
-                        <span className="font-medium text-[var(--foreground)]">{row.original.word}</span>
-                        {row.original.transcription && (
-                            <span className="block text-xs text-[var(--muted-foreground)] mt-0.5">
-                {row.original.transcription}
-              </span>
-                        )}
+                    <div className="flex items-center gap-2">
+                        <div>
+                            <span className="font-medium text-[var(--foreground)]">{row.original.word}</span>
+                            {row.original.transcription && (
+                                <span className="block text-xs text-[var(--muted-foreground)] mt-0.5">
+                                    {row.original.transcription}
+                                </span>
+                            )}
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => { e.stopPropagation(); speak(row.original.word); }}
+                            title="Pronounce"
+                            className="shrink-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                        >
+                            <Volume2 className="h-3.5 w-3.5"/>
+                        </Button>
                     </div>
                 ),
             }),

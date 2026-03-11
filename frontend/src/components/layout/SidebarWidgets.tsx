@@ -101,6 +101,8 @@ function WordOfTheDayWidget() {
           transcription: data.transcription,
           partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
           definitions: data.definition ? [data.definition] : undefined,
+          examples: data.examples?.length ? data.examples : undefined,
+          synonyms: data.synonyms?.length ? data.synonyms : undefined,
         }}
         suggestedTags={[]}
       />

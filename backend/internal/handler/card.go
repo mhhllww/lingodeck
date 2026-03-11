@@ -193,7 +193,11 @@ func (h *CardHandler) UpdateCard(w http.ResponseWriter, r *http.Request) {
 		existing.Transcription = patch.Transcription
 	}
 	if patch.DeckID != nil {
-		existing.DeckID = patch.DeckID
+		if *patch.DeckID == 0 {
+			existing.DeckID = nil
+		} else {
+			existing.DeckID = patch.DeckID
+		}
 	}
 	if patch.PartOfSpeech != nil {
 		existing.PartOfSpeech = patch.PartOfSpeech

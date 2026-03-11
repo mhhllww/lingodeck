@@ -54,6 +54,8 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
         animate={{ opacity: showControls && !isAnimating ? 1 : 0 }}
         className="absolute top-2 right-2 z-20 flex gap-1"
         data-no-flip="true"
+        onMouseEnter={() => { if (flipTimer.current) { clearTimeout(flipTimer.current); flipTimer.current = null; } }}
+        onMouseLeave={() => { flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 300); }}
       >
         {onAssignDeck && (
           <Button
@@ -109,6 +111,8 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
                 <button
                   data-no-flip="true"
                   onClick={(e) => { e.stopPropagation(); speak(card.word); }}
+                  onMouseEnter={() => { if (flipTimer.current) { clearTimeout(flipTimer.current); flipTimer.current = null; } }}
+                  onMouseLeave={() => { flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 300); }}
                   className="text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
                   aria-label={`Pronounce ${card.word}`}
                 >
