@@ -8,6 +8,8 @@ export interface WordOfTheDayData {
   transcription: string;
   part_of_speech: string;
   definition: string;
+  examples: string[];
+  synonyms: string[];
   suggested_deck: { id: number; name: string } | null;
   already_added: boolean;
 }

@@ -48,6 +48,8 @@ type WordOfTheDayResponse struct {
 	Transcription string         `json:"transcription"`
 	PartOfSpeech  string         `json:"part_of_speech"`
 	Definition    string         `json:"definition"`
+	Examples      []string       `json:"examples"`
+	Synonyms      []string       `json:"synonyms"`
 	SuggestedDeck *SuggestedDeck `json:"suggested_deck"`
 	AlreadyAdded  bool           `json:"already_added"`
 }

@@ -131,6 +131,8 @@ func (s *dailyService) GetWordOfTheDay(ctx context.Context, userID uuid.UUID) (*
 		Transcription: wod.Word.Transcription,
 		PartOfSpeech:  wod.Word.PartOfSpeech,
 		Definition:    definition,
+		Examples:      wod.Word.Examples,
+		Synonyms:      wod.Word.Synonyms,
 	}
 
 	// Check if word already in user's cards
