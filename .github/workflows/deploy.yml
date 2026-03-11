@@ -79,12 +79,15 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: deploy
           key: ${{ secrets.SSH_KEY }}
-          source: "frontend/.next"
+          source: "frontend/.next,frontend/package.json,frontend/package-lock.json"
           target: "/var/www/lingodeck"
-      - name: Start frontend
+      - name: Install deps and start frontend
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
           username: deploy
           key: ${{ secrets.SSH_KEY }}
-          script: sudo systemctl start lingodeck-front
+          script: |
+            cd /var/www/lingodeck/frontend
+            npm ci --omit=dev
+            sudo systemctl start lingodeck-front
