@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { Layers, Check, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { DeckFilterDropdown } from '@/components/ui/deck-filter-dropdown';
 import type { CardFilters as CardFiltersType, Deck } from '@/types/card';
 
 interface CardFiltersProps {
@@ -36,45 +35,11 @@ export function CardFilters({ filters, allTags, decks, onChange }: CardFiltersPr
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {decks.length > 0 && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-md border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] transition-colors">
-              <Layers className="h-3.5 w-3.5 opacity-50" />
-              {filters.deckIds.length === 0
-                ? 'All decks'
-                : `${filters.deckIds.length} selected`}
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-48 p-1">
-            <button
-              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
-              onClick={() => toggleDeck('none')}
-            >
-              <span className={`h-4 w-4 flex items-center justify-center rounded border ${filters.deckIds.includes('none') ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
-                {filters.deckIds.includes('none') && <Check className="h-3 w-3 text-white" />}
-              </span>
-              <span className="inline-block h-2.5 w-2.5 rounded-full border border-[var(--border)]" />
-              No deck
-            </button>
-            {decks.map((deck) => (
-              <button
-                key={deck.id}
-                className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
-                onClick={() => toggleDeck(deck.id)}
-              >
-                <span className={`h-4 w-4 flex items-center justify-center rounded border ${filters.deckIds.includes(deck.id) ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
-                  {filters.deckIds.includes(deck.id) && <Check className="h-3 w-3 text-white" />}
-                </span>
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: deck.color }}
-                />
-                {deck.name}
-              </button>
-            ))}
-          </PopoverContent>
-        </Popover>
+        <DeckFilterDropdown
+          decks={decks}
+          selectedIds={filters.deckIds}
+          onToggle={toggleDeck}
+        />
       )}
       {allTags.map((tag) => (
         <Badge
