@@ -162,7 +162,7 @@ export async function apiUpdateCard(
   if (data.examples !== undefined) body.examples = data.examples;
   if (data.synonyms !== undefined) body.synonyms = data.synonyms;
   if (data.tags !== undefined) body.tags = data.tags;
-  if (data.deckId !== undefined) body.deck_id = Number(data.deckId);
+  if ('deckId' in data) body.deck_id = data.deckId ? Number(data.deckId) : 0;
   if (data.timesCorrect !== undefined) body.times_correct = data.timesCorrect;
   if (data.timesIncorrect !== undefined) body.times_incorrect = data.timesIncorrect;
   if (data.lastStudiedAt !== undefined) body.last_studied_at = data.lastStudiedAt;
