@@ -183,7 +183,7 @@ export const useCardStore = create<CardStore>()(
         if (!MOCK && /^\d+$/.test(id)) {
           const deck = get().decks.find((d) => d.id === id);
           if (deck) {
-            apiUpdateDeck(id, { name: deck.name, color: deck.color }).catch(console.error);
+            apiUpdateDeck(id, { name: deck.name, color: deck.color, description: deck.description }).catch(console.error);
           }
         }
       },
