@@ -63,6 +63,7 @@ export function mapDeck(d: BackendDeck, colorIndex = 0): Deck {
   return {
     id: String(d.id),
     name: d.name,
+    description: d.description ?? '',
     color: d.color ?? FALLBACK_COLORS[colorIndex % FALLBACK_COLORS.length],
     tags: d.tags ?? [],
     createdAt: d.created_at,
@@ -101,7 +102,7 @@ export async function apiCreateDeck(name: string, color?: string): Promise<Deck>
 
 export async function apiUpdateDeck(
   id: string,
-  data: { name?: string; color?: string },
+  data: { name?: string; color?: string; description?: string },
 ): Promise<Deck> {
   const d = await request<BackendDeck>(`/api/decks/${id}`, {
     method: 'PUT',

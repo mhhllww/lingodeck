@@ -25,7 +25,7 @@ import {
     ContextMenuItem,
     ContextMenuSeparator
 } from '@/components/ui/context-menu';
-import {Popover, PopoverTrigger, PopoverContent} from '@/components/ui/popover';
+import {DeckFilterDropdown} from '@/components/ui/deck-filter-dropdown';
 import {CreateCardModal} from '@/components/cards/CreateCardModal';
 import {useCards} from '@/hooks/useCards';
 import {useSpeech} from '@/hooks/useSpeech';
@@ -73,6 +73,8 @@ export function DictionaryTable() {
         () => [...new Set(allCards.flatMap((c) => c.tags ?? []))].sort(),
         [allCards]
     );
+
+    const activeDeckIdsList = useMemo(() => [...activeDeckIds], [activeDeckIds]);
 
     const toggleDeckFilter = useCallback((id: string) => {
         setActiveDeckIds((prev) => {
@@ -345,45 +347,11 @@ export function DictionaryTable() {
                         disabled={modalOpen}
                     />
                     {decks.length > 0 && (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-md border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] transition-colors">
-                                    <Layers className="h-3.5 w-3.5 opacity-50" />
-                                    {activeDeckIds.size === 0
-                                        ? 'All decks'
-                                        : `${activeDeckIds.size} selected`}
-                                    <ChevronDown className="h-3 w-3 opacity-50" />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent align="start" className="w-48 p-1">
-                                <button
-                                    className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
-                                    onClick={() => toggleDeckFilter('none')}
-                                >
-                                    <span className={`h-4 w-4 flex items-center justify-center rounded border ${activeDeckIds.has('none') ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
-                                        {activeDeckIds.has('none') && <Check className="h-3 w-3 text-white" />}
-                                    </span>
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full border border-[var(--border)]" />
-                                    No deck
-                                </button>
-                                {decks.map((deck) => (
-                                    <button
-                                        key={deck.id}
-                                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-[var(--muted)] transition-colors"
-                                        onClick={() => toggleDeckFilter(deck.id)}
-                                    >
-                                        <span className={`h-4 w-4 flex items-center justify-center rounded border ${activeDeckIds.has(deck.id) ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[var(--border)]'}`}>
-                                            {activeDeckIds.has(deck.id) && <Check className="h-3 w-3 text-white" />}
-                                        </span>
-                                        <span
-                                            className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                                            style={{ backgroundColor: deck.color }}
-                                        />
-                                        {deck.name}
-                                    </button>
-                                ))}
-                            </PopoverContent>
-                        </Popover>
+                        <DeckFilterDropdown
+                            decks={decks}
+                            selectedIds={activeDeckIdsList}
+                            onToggle={toggleDeckFilter}
+                        />
                     )}
                     {allTags.map((tag) => (
                         <Badge
