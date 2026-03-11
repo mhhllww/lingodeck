@@ -290,7 +290,7 @@ export function DictionaryTable() {
                 ),
             }),
         ],
-        [handleDelete, handleEdit, decks, router]
+        [handleDelete, handleEdit, decks, router, speak]
     );
 
     const table = useReactTable({
