@@ -36,6 +36,27 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
+  const viewToggle = (
+    <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] p-1 shrink-0">
+      <Button
+        variant={view === 'table' ? 'default' : 'ghost'}
+        size="icon-sm"
+        onClick={() => setView('table')}
+        title="Table view"
+      >
+        <Table2 className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={view === 'cards' ? 'default' : 'ghost'}
+        size="icon-sm"
+        onClick={() => setView('cards')}
+        title="Card view"
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-5">
       <DeckHero
@@ -58,53 +79,9 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
       />
 
       {view === 'table' ? (
-        <DictionaryTable
-          deckId={id}
-          viewToggle={
-            <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] p-1 shrink-0">
-              <Button
-                variant={view === 'table' ? 'default' : 'ghost'}
-                size="icon-sm"
-                onClick={() => setView('table')}
-                title="Table view"
-              >
-                <Table2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={view === 'cards' ? 'default' : 'ghost'}
-                size="icon-sm"
-                onClick={() => setView('cards')}
-                title="Card view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          }
-        />
+        <DictionaryTable deckId={id} viewToggle={viewToggle} />
       ) : (
-        <CardGrid
-          deckId={id}
-          viewToggle={
-            <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] p-1 shrink-0">
-              <Button
-                variant={view === 'table' ? 'default' : 'ghost'}
-                size="icon-sm"
-                onClick={() => setView('table')}
-                title="Table view"
-              >
-                <Table2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={view === 'cards' ? 'default' : 'ghost'}
-                size="icon-sm"
-                onClick={() => setView('cards')}
-                title="Card view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          }
-        />
+        <CardGrid deckId={id} viewToggle={viewToggle} />
       )}
 
       <AddCardsToDeckModal
