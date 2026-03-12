@@ -26,6 +26,7 @@ import {
     ContextMenuSeparator
 } from '@/components/ui/context-menu';
 import {DeckFilterDropdown} from '@/components/ui/deck-filter-dropdown';
+import {getTagClasses} from '@/lib/tagColors';
 import {CreateCardModal} from '@/components/cards/CreateCardModal';
 import {useCards} from '@/hooks/useCards';
 import {useSpeech} from '@/hooks/useSpeech';
@@ -226,9 +227,9 @@ export function DictionaryTable() {
                     return (
                         <div className="flex flex-wrap gap-1">
                             {tags.map((tag) => (
-                                <Badge key={tag} variant="secondary" className="text-xs">
-                                    {tag}
-                                </Badge>
+                                <span key={tag} className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
+                                    <span className="opacity-40">#</span>{tag}
+                                </span>
                             ))}
                         </div>
                     );
@@ -353,16 +354,18 @@ export function DictionaryTable() {
                             onToggle={toggleDeckFilter}
                         />
                     )}
-                    {allTags.map((tag) => (
-                        <Badge
-                            key={tag}
-                            variant={activeTags.includes(tag) ? 'default' : 'clickable'}
-                            onClick={() => toggleTag(tag)}
-                            className="cursor-pointer"
-                        >
-                            {tag}
-                        </Badge>
-                    ))}
+                    {allTags.map((tag) => {
+                        const active = activeTags.includes(tag);
+                        return (
+                            <button
+                                key={tag}
+                                onClick={() => toggleTag(tag)}
+                                className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium transition-opacity ${getTagClasses(tag)} ${active ? 'opacity-100 ring-1 ring-current' : 'opacity-50 hover:opacity-80'}`}
+                            >
+                                <span className="opacity-40">#</span>{tag}
+                            </button>
+                        );
+                    })}
                     {(activeTags.length > 0 || activeDeckIds.size > 0) && (
                         <Badge
                             variant="outline"

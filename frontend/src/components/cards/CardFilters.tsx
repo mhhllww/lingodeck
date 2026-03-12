@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DeckFilterDropdown } from '@/components/ui/deck-filter-dropdown';
+import { getTagClasses } from '@/lib/tagColors';
 import type { CardFilters as CardFiltersType, Deck } from '@/types/card';
 
 interface CardFiltersProps {
@@ -41,16 +42,18 @@ export function CardFilters({ filters, allTags, decks, onChange }: CardFiltersPr
           onToggle={toggleDeck}
         />
       )}
-      {allTags.map((tag) => (
-        <Badge
-          key={tag}
-          variant={filters.tags.includes(tag) ? 'default' : 'clickable'}
-          onClick={() => toggleTag(tag)}
-          className="cursor-pointer"
-        >
-          {tag}
-        </Badge>
-      ))}
+      {allTags.map((tag) => {
+        const active = filters.tags.includes(tag);
+        return (
+          <button
+            key={tag}
+            onClick={() => toggleTag(tag)}
+            className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium transition-opacity ${getTagClasses(tag)} ${active ? 'opacity-100 ring-1 ring-current' : 'opacity-50 hover:opacity-80'}`}
+          >
+            <span className="opacity-40">#</span>{tag}
+          </button>
+        );
+      })}
       {hasActiveFilters && (
         <Badge
           variant="outline"
