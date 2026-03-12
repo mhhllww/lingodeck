@@ -3,6 +3,7 @@
 import { useMemo, useState, memo } from 'react';
 import { Layers, Check, ChevronDown, Search } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import type { Deck } from '@/types/card';
 
 /* ── Multi-select (filter) ── */
@@ -11,12 +12,14 @@ interface DeckFilterDropdownProps {
   decks: Deck[];
   selectedIds: string[];
   onToggle: (id: string) => void;
+  triggerClassName?: string;
 }
 
 export const DeckFilterDropdown = memo(function DeckFilterDropdown({
   decks,
   selectedIds,
   onToggle,
+  triggerClassName,
 }: DeckFilterDropdownProps) {
   const [search, setSearch] = useState('');
 
@@ -29,7 +32,7 @@ export const DeckFilterDropdown = memo(function DeckFilterDropdown({
   return (
     <Popover onOpenChange={(o) => { if (!o) setSearch(''); }}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-md border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] transition-colors">
+        <button className={cn("inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-md border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--muted)] transition-colors", triggerClassName)}>
           <Layers className="h-3.5 w-3.5 opacity-50" />
           {selectedIds.length === 0 ? 'All decks' : `${selectedIds.length} selected`}
           <ChevronDown className="h-3 w-3 opacity-50" />
