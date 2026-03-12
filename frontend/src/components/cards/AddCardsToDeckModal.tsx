@@ -6,7 +6,7 @@ import { X, Search, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCardStore } from '@/store/useCardStore';
+import { useAllCards, useUpdateCard } from '@/hooks/useCardsQuery';
 import { cn } from '@/lib/utils';
 
 interface AddCardsToDeckModalProps {
@@ -16,7 +16,8 @@ interface AddCardsToDeckModalProps {
 }
 
 export function AddCardsToDeckModal({ deckId, open, onOpenChange }: AddCardsToDeckModalProps) {
-  const { cards, updateCard } = useCardStore();
+  const { data: cards = [] } = useAllCards();
+  const updateCard = useUpdateCard();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -42,7 +43,7 @@ export function AddCardsToDeckModal({ deckId, open, onOpenChange }: AddCardsToDe
   };
 
   const handleAdd = () => {
-    selected.forEach((id) => updateCard(id, { deckId }));
+    selected.forEach((id) => updateCard.mutate({ id, data: { deckId } }));
     setSelected(new Set());
     setQuery('');
     onOpenChange(false);

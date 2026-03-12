@@ -6,7 +6,7 @@ import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSpeech } from '@/hooks/useSpeech';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks } from '@/hooks/useCardsQuery';
 import type { VocabularyCard } from '@/types/card';
 
 interface FlipCardProps {
@@ -17,7 +17,8 @@ interface FlipCardProps {
 }
 
 export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps) {
-  const deck = useCardStore((s) => s.decks.find((d) => d.id === card.deckId));
+  const { data: decks = [] } = useDecks();
+  const deck = decks.find((d) => d.id === card.deckId);
   const [rotation, setRotation] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);

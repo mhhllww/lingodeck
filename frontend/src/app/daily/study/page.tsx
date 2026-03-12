@@ -10,7 +10,7 @@ import { ProgressBar } from '@/components/study/ProgressBar';
 import { StudyCard } from '@/components/study/StudyCard';
 import { SessionResults } from '@/components/study/SessionResults';
 import { useStudySession } from '@/hooks/useStudySession';
-import { useCardStore } from '@/store/useCardStore';
+import { useBulkUpdateStudyStats } from '@/hooks/useCardsQuery';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
 import { saveStudyResults } from '@/lib/api/cards';
 
@@ -23,7 +23,7 @@ const cardVariants = {
 export default function DailyStudyPage() {
   const router = useRouter();
   const { cards, clear } = useDailyStudyStore();
-  const { bulkUpdateStudyStats } = useCardStore();
+  const bulkUpdateStudyStats = useBulkUpdateStudyStats();
   const queryClient = useQueryClient();
 
   const {

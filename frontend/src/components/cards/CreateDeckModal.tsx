@@ -6,7 +6,8 @@ import { X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCardStore, DECK_COLORS, createDeckOnBackend } from '@/store/useCardStore';
+import { DECK_COLORS } from '@/store/useCardStore';
+import { useDecks, useCreateDeck } from '@/hooks/useCardsQuery';
 import { cn } from '@/lib/utils';
 import type { Deck } from '@/types/card';
 
@@ -21,7 +22,8 @@ interface CreateDeckModalProps {
 }
 
 export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckModalProps) {
-  const { decks } = useCardStore();
+  const { data: decks = [] } = useDecks();
+  const createDeck = useCreateDeck();
   const [name, setName] = useState('');
   const [color, setColor] = useState(randomColor);
   const [customColor, setCustomColor] = useState('');
@@ -42,7 +44,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
   const isCustom = !!customColor && !DECK_COLORS.includes(customColor as typeof DECK_COLORS[number]);
   const activeColor = customColor || color;
 
-  // Check if name already exists
   const nameExists = useMemo(
     () => decks.some((d) => d.name.toLowerCase() === name.trim().toLowerCase()),
     [decks, name]
@@ -52,7 +53,7 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed || nameExists) return;
-    const deck = await createDeckOnBackend({ name: trimmed, tags: [], color: activeColor });
+    const deck = await createDeck.mutateAsync({ name: trimmed, tags: [], color: activeColor });
     onCreated?.(deck);
     onOpenChange(false);
     setName('');
@@ -102,7 +103,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Name */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--foreground)]">
                       Deck name <span className="text-[var(--destructive)]">*</span>
@@ -121,7 +121,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                     )}
                   </div>
 
-                  {/* Color */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--foreground)]">Color</label>
                     <div className="flex items-center gap-2">
@@ -141,7 +140,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                         />
                       ))}
 
-                      {/* Custom color via native picker */}
                       <div className="relative ml-1">
                         <input
                           type="color"
@@ -163,7 +161,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                         </div>
                       </div>
 
-                      {/* Randomize */}
                       <Button
                         type="button"
                         variant="ghost"
@@ -177,7 +174,6 @@ export function CreateDeckModal({ open, onOpenChange, onCreated }: CreateDeckMod
                     </div>
                   </div>
 
-                  {/* Preview */}
                   <div
                     className="rounded-lg border border-[var(--border)] p-3 transition-colors"
                     style={{ borderTopColor: activeColor, borderTopWidth: 3 }}

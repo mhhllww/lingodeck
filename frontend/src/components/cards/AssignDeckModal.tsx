@@ -4,7 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks, useUpdateCard } from '@/hooks/useCardsQuery';
 import { cn } from '@/lib/utils';
 import type { VocabularyCard } from '@/types/card';
 
@@ -15,11 +15,12 @@ interface AssignDeckModalProps {
 }
 
 export function AssignDeckModal({ card, open, onOpenChange }: AssignDeckModalProps) {
-  const { decks, updateCard } = useCardStore();
+  const { data: decks = [] } = useDecks();
+  const updateCard = useUpdateCard();
 
   const handleSelect = (deckId: string | null) => {
     if (!card) return;
-    updateCard(card.id, { deckId: deckId ?? undefined });
+    updateCard.mutate({ id: card.id, data: { deckId: deckId ?? undefined } });
     onOpenChange(false);
   };
 

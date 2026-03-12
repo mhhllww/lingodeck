@@ -11,7 +11,7 @@ import { AssignDeckModal } from './AssignDeckModal';
 import { AddCardsToDeckModal } from './AddCardsToDeckModal';
 import { Button } from '@/components/ui/button';
 import { useCards } from '@/hooks/useCards';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks } from '@/hooks/useCardsQuery';
 import { useToast } from '@/components/ui/toast';
 import type { VocabularyCard } from '@/types/card';
 
@@ -20,11 +20,11 @@ interface CardGridProps {
 }
 
 export function CardGrid({ deckId }: CardGridProps = {}) {
-  const { cards: filteredCards, allCards: allStoreCards, filters, deleteCard, setFilters } = useCards();
-  const decks = useCardStore((s) => s.decks);
+  const { cards: filteredCards, allCards, filters, deleteCard, setFilters } = useCards();
+  const { data: decks = [] } = useDecks();
   const cards = deckId ? filteredCards.filter((c) => c.deckId === deckId) : filteredCards;
-  const allCards = deckId ? allStoreCards.filter((c) => c.deckId === deckId) : allStoreCards;
-const { toast } = useToast();
+  const allDeckCards = deckId ? allCards.filter((c) => c.deckId === deckId) : allCards;
+  const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editCard, setEditCard] = useState<VocabularyCard | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -32,7 +32,7 @@ const { toast } = useToast();
   const [addToDeckOpen, setAddToDeckOpen] = useState(false);
 
   const allTags = [
-    ...new Set(allCards.flatMap((c) => c.tags ?? [])),
+    ...new Set(allDeckCards.flatMap((c) => c.tags ?? [])),
   ].sort();
 
   const handleDelete = (id: string) => {
@@ -56,19 +56,18 @@ const { toast } = useToast();
 
   return (
     <div className="space-y-6">
-      {/* Toolbar */}
-      {allCards.length > 0 && (
+      {allDeckCards.length > 0 && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-1.5 flex-1">
             <SearchPalette
               value={filters.query}
               onChange={(q) => setFilters({ query: q })}
-              totalCount={allCards.length}
+              totalCount={allDeckCards.length}
               filteredCount={cards.length}
               disabled={modalOpen}
             />
             <p className="text-sm text-[var(--muted-foreground)]">
-              {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
+              {allDeckCards.length} {allDeckCards.length === 1 ? 'word' : 'words'} saved
               {!filters.query && <span className="ml-2 opacity-50">— start typing to search</span>}
             </p>
           </div>
@@ -81,12 +80,10 @@ const { toast } = useToast();
         </div>
       )}
 
-      {/* Filters */}
-      {allCards.length > 0 && (
+      {allDeckCards.length > 0 && (
         <CardFilters filters={filters} allTags={allTags} decks={decks} onChange={setFilters} />
       )}
 
-      {/* Grid */}
       {cards.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <AnimatePresence mode="popLayout">
@@ -112,7 +109,7 @@ const { toast } = useToast();
             ))}
           </AnimatePresence>
         </div>
-      ) : allCards.length === 0 ? (
+      ) : allDeckCards.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
           <BookOpen className="h-12 w-12 text-[var(--muted-foreground)] opacity-30" />
           <div>

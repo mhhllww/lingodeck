@@ -7,7 +7,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks, useAllCards, useUpdateDeck, useDeleteDeck } from '@/hooks/useCardsQuery';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { CreateDeckModal } from '@/components/cards/CreateDeckModal';
 import { formatDate } from '@/lib/utils';
@@ -23,7 +23,8 @@ function DeckCard({
   lastStudiedAt: string | null;
 }) {
   const router = useRouter();
-  const { deleteDeck, updateDeck } = useCardStore();
+  const updateDeck = useUpdateDeck();
+  const deleteDeck = useDeleteDeck();
   const [previewColor, setPreviewColor] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -51,7 +52,7 @@ function DeckCard({
           <div className="flex items-center gap-2 min-w-0">
             <ColorPicker
               value={deck.color}
-              onChange={(color) => { setPreviewColor(null); updateDeck(deck.id, { color }); }}
+              onChange={(color) => { setPreviewColor(null); updateDeck.mutate({ id: deck.id, data: { color } }); }}
               onPreview={handlePreview}
             />
             <h3 className="font-semibold text-[var(--foreground)] text-base leading-tight truncate">
@@ -65,7 +66,7 @@ function DeckCard({
               if (cardCount > 0) {
                 setDeleteOpen(true);
               } else {
-                deleteDeck(deck.id, false);
+                deleteDeck.mutate({ id: deck.id, keepCards: false });
               }
             }}
             title="Delete deck"
@@ -105,7 +106,6 @@ function DeckCard({
         </Button>
       </div>
 
-      {/* Delete confirmation dialog */}
       <Dialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AnimatePresence>
           {deleteOpen && (
@@ -148,7 +148,7 @@ function DeckCard({
                       className="flex-1 gap-2 justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteDeck(deck.id, false);
+                        deleteDeck.mutate({ id: deck.id, keepCards: false });
                         setDeleteOpen(false);
                       }}
                     >
@@ -161,7 +161,7 @@ function DeckCard({
                         className="flex-1 gap-2 justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteDeck(deck.id, true);
+                          deleteDeck.mutate({ id: deck.id, keepCards: true });
                           setDeleteOpen(false);
                         }}
                       >
@@ -182,7 +182,8 @@ function DeckCard({
 
 
 export default function DecksPage() {
-  const { decks, cards } = useCardStore();
+  const { data: decks = [] } = useDecks();
+  const { data: cards = [] } = useAllCards();
   const [modalOpen, setModalOpen] = useState(false);
 
   const cardCountByDeck = (deckId: string) =>

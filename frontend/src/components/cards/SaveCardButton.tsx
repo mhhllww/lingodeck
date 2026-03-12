@@ -5,7 +5,8 @@ import { BookmarkPlus, BookmarkCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { DeckTagSelector } from './DeckTagSelector';
-import { useCardStore, createCardOnBackend } from '@/store/useCardStore';
+import { useAllCards, useDecks, useCreateCard, useDeleteCard } from '@/hooks/useCardsQuery';
+import { useCardStore } from '@/store/useCardStore';
 import { useToast } from '@/components/ui/toast';
 import type { VocabularyCard } from '@/types/card';
 
@@ -17,7 +18,11 @@ interface SaveCardButtonProps {
 }
 
 export function SaveCardButton({ cardData, suggestedTags, onSaved, size = 'lg' as const }: SaveCardButtonProps) {
-  const { cards, deleteCard, setLastUsedDeckId, decks } = useCardStore();
+  const { data: cards = [] } = useAllCards();
+  const { data: decks = [] } = useDecks();
+  const setLastUsedDeckId = useCardStore((s) => s.setLastUsedDeckId);
+  const createCard = useCreateCard();
+  const deleteCard = useDeleteCard();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
@@ -29,7 +34,7 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved, size = 'lg' a
   const handleSave = async ({ deckId, tags }: { deckId: string | null; tags: string[] }) => {
     setOpen(false);
 
-    const card = await createCardOnBackend({
+    const card = await createCard.mutateAsync({
       ...cardData,
       deckId: deckId ?? undefined,
       tags,
@@ -46,7 +51,7 @@ export function SaveCardButton({ cardData, suggestedTags, onSaved, size = 'lg' a
       duration: 4000,
       action: {
         label: 'Undo',
-        onClick: () => deleteCard(card.id),
+        onClick: () => deleteCard.mutate(card.id),
       },
     });
 
