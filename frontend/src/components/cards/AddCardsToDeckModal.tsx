@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DeckFilterDropdown } from '@/components/ui/deck-filter-dropdown';
-import { useCardStore } from '@/store/useCardStore';
+import { useAllCards, useDecks, useUpdateCard } from '@/hooks/useCardsQuery';
 import { cn } from '@/lib/utils';
 import type { VocabularyCard } from '@/types/card';
 
@@ -18,7 +18,9 @@ interface AddCardsToDeckModalProps {
 }
 
 export function AddCardsToDeckModal({ deckId, open, onOpenChange }: AddCardsToDeckModalProps) {
-  const { cards, decks, updateCard } = useCardStore();
+  const { data: cards = [] } = useAllCards();
+  const { data: decks = [] } = useDecks();
+  const updateCard = useUpdateCard();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filterDeckIds, setFilterDeckIds] = useState<string[]>([]);
@@ -78,7 +80,7 @@ export function AddCardsToDeckModal({ deckId, open, onOpenChange }: AddCardsToDe
       setConfirming(true);
       return;
     }
-    selected.forEach((id) => updateCard(id, { deckId }));
+    selected.forEach((id) => updateCard.mutate({ id, data: { deckId } }));
     resetAndClose();
   };
 
