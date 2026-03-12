@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { ArrowLeft, BookOpen, BarChart3, Clock, Layers } from 'lucide-react';
+import { ArrowLeft, BookOpen, BarChart3, Clock, Layers, Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import type { Deck, VocabularyCard } from '@/types/card';
@@ -27,40 +27,34 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack }: DeckHeroProps) {
-  const [editingName, setEditingName] = useState(false);
-  const [editingDesc, setEditingDesc] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [nameValue, setNameValue] = useState(deck.name);
   const [descValue, setDescValue] = useState(deck.description ?? '');
   const nameRef = useRef<HTMLInputElement>(null);
-  const descRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setNameValue(deck.name); }, [deck.name]);
   useEffect(() => { setDescValue(deck.description ?? ''); }, [deck.description]);
 
   useEffect(() => {
-    if (editingName) nameRef.current?.focus();
-  }, [editingName]);
-  useEffect(() => {
-    if (editingDesc) descRef.current?.focus();
-  }, [editingDesc]);
+    if (isEditing) nameRef.current?.focus();
+  }, [isEditing]);
 
-  const saveName = useCallback(() => {
-    const trimmed = nameValue.trim();
-    if (trimmed && trimmed !== deck.name) {
-      onUpdateDeck({ name: trimmed });
-    } else {
-      setNameValue(deck.name);
-    }
-    setEditingName(false);
-  }, [nameValue, deck.name, onUpdateDeck]);
+  const saveAndExit = useCallback(() => {
+    const trimmedName = nameValue.trim();
+    const trimmedDesc = descValue.trim();
+    const updates: Partial<Omit<Deck, 'id' | 'createdAt'>> = {};
+    if (trimmedName && trimmedName !== deck.name) updates.name = trimmedName;
+    else setNameValue(deck.name);
+    if (trimmedDesc !== (deck.description ?? '')) updates.description = trimmedDesc;
+    if (Object.keys(updates).length > 0) onUpdateDeck(updates);
+    setIsEditing(false);
+  }, [nameValue, descValue, deck.name, deck.description, onUpdateDeck]);
 
-  const saveDesc = useCallback(() => {
-    const trimmed = descValue.trim();
-    if (trimmed !== (deck.description ?? '')) {
-      onUpdateDeck({ description: trimmed });
-    }
-    setEditingDesc(false);
-  }, [descValue, deck.description, onUpdateDeck]);
+  const cancelEditing = useCallback(() => {
+    setNameValue(deck.name);
+    setDescValue(deck.description ?? '');
+    setIsEditing(false);
+  }, [deck.name, deck.description]);
 
   const stats = useMemo(() => {
     const total = deckCards.length;
@@ -100,6 +94,27 @@ export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack }: Dec
               value={deck.color}
               onChange={(color) => onUpdateDeck({ color })}
             />
+            {isEditing ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={saveAndExit}
+                className="text-white/80 hover:text-white hover:bg-white/10"
+                aria-label="Save changes"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setIsEditing(true)}
+                className="text-white/80 hover:text-white hover:bg-white/10"
+                aria-label="Edit deck"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0"
@@ -122,34 +137,41 @@ export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack }: Dec
           <Layers className="h-6 w-6 text-white" />
         </div>
 
-        {/* Editable name */}
-        <input
-          ref={nameRef}
-          value={nameValue}
-          onChange={(e) => setNameValue(e.target.value)}
-          onFocus={() => setEditingName(true)}
-          onBlur={() => { saveName(); setEditingName(false); }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.currentTarget.blur(); }
-            if (e.key === 'Escape') { setNameValue(deck.name); setEditingName(false); e.currentTarget.blur(); }
-          }}
-          className="text-2xl font-bold text-[var(--foreground)] bg-transparent outline-none w-full truncate cursor-pointer border-0 border-b-1 border-transparent pb-[1px] mb-1 focus:border-[var(--primary)]"
-        />
+        {/* Name */}
+        {isEditing ? (
+          <input
+            ref={nameRef}
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') saveAndExit();
+              if (e.key === 'Escape') cancelEditing();
+            }}
+            className="text-2xl font-bold text-[var(--foreground)] bg-[var(--muted)]/50 rounded-lg outline-none w-full truncate px-2 py-0.5 mb-1 focus:ring-2 focus:ring-[var(--ring)]"
+          />
+        ) : (
+          <h1 className="text-2xl font-bold text-[var(--foreground)] truncate px-2 py-0.5 mb-1">
+            {deck.name}
+          </h1>
+        )}
 
-        {/* Editable description */}
-        <input
-          ref={descRef}
-          value={descValue}
-          onChange={(e) => setDescValue(e.target.value)}
-          onFocus={() => setEditingDesc(true)}
-          onBlur={() => { saveDesc(); setEditingDesc(false); }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.currentTarget.blur(); }
-            if (e.key === 'Escape') { setDescValue(deck.description ?? ''); setEditingDesc(false); e.currentTarget.blur(); }
-          }}
-          placeholder="Add a description..."
-          className="text-sm text-[var(--muted-foreground)] bg-transparent outline-none w-full mb-3 cursor-pointer border-0 border-b-1 border-transparent pb-[1px] focus:border-[var(--primary)]"
-        />
+        {/* Description */}
+        {isEditing ? (
+          <input
+            value={descValue}
+            onChange={(e) => setDescValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') saveAndExit();
+              if (e.key === 'Escape') cancelEditing();
+            }}
+            placeholder="Add a description..."
+            className="text-sm text-[var(--muted-foreground)] bg-[var(--muted)]/50 rounded-lg outline-none w-full px-2 py-0.5 mb-3 focus:ring-2 focus:ring-[var(--ring)]"
+          />
+        ) : (
+          <p className="text-sm text-[var(--muted-foreground)] px-2 py-0.5 mb-3">
+            {deck.description || 'No description'}
+          </p>
+        )}
 
         {/* Stats row */}
         <div className="flex items-center gap-5 text-sm">
