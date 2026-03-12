@@ -133,16 +133,26 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-end justify-between gap-2">
             {deck ? (
-              <span className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] truncate">
+              <span className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] truncate shrink-0">
                 <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: deck.color }} />
                 {deck.name}
               </span>
             ) : (
               <span />
             )}
-            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+            {card.tags && card.tags.length > 0 ? (
+              <div className="flex flex-wrap justify-end gap-1">
+                {card.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
+                    <span className="opacity-40">#</span>{tag}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+            )}
           </div>
         </div>
 
@@ -174,18 +184,7 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Move cursor away to see word</p>
-            {card.tags && card.tags.length > 0 && (
-              <div className="flex flex-wrap justify-end gap-1">
-                {card.tags.map((tag) => (
-                  <span key={tag} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
-                    <span className="opacity-40">#</span>{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+          <p className="text-xs text-[var(--muted-foreground)]">Move cursor away to see word</p>
         </div>
       </motion.div>
     </div>
