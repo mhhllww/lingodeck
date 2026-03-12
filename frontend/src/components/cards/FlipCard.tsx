@@ -175,16 +175,16 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
             )}
           </div>
           <div className="flex items-center justify-between gap-2">
-            {card.tags && card.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Move cursor away to see word</p>
+            {card.tags && card.tags.length > 0 && (
+              <div className="flex flex-wrap justify-end gap-1">
                 {card.tags.map((tag) => (
                   <span key={tag} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
                     <span className="opacity-40">#</span>{tag}
                   </span>
                 ))}
               </div>
-            ) : <span />}
-            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Move cursor away to see word</p>
+            )}
           </div>
         </div>
       </motion.div>
