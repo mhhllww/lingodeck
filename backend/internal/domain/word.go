@@ -13,6 +13,7 @@ type Word struct {
 	Definitions   []string  `json:"definitions"`
 	Examples      []string  `json:"examples"`
 	Synonyms      []string  `json:"synonyms"`
+	Tags          []string  `json:"tags"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 

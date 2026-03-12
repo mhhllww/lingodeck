@@ -63,6 +63,34 @@ type groqWordResult struct {
 	Definitions   []string `json:"definitions"`
 	Examples      []string `json:"examples"`
 	Synonyms      []string `json:"synonyms"`
+	Tags          []string `json:"tags"`
+}
+
+var allowedTags = map[string]bool{
+	"travel": true, "business": true, "food": true, "technology": true,
+	"nature": true, "health": true, "emotions": true, "sport": true,
+	"education": true, "law": true, "finance": true, "politics": true,
+	"art": true, "music": true, "science": true, "fashion": true,
+	"family": true, "society": true, "religion": true, "home": true,
+	"animals": true, "weather": true, "time": true, "body": true,
+	"culture": true, "formal": true, "informal": true, "slang": true,
+	"academic": true, "literary": true,
+}
+
+func normalizeTags(raw []string) []string {
+	seen := map[string]bool{}
+	result := []string{}
+	for _, t := range raw {
+		t = strings.ToLower(strings.TrimSpace(t))
+		if allowedTags[t] && !seen[t] {
+			seen[t] = true
+			result = append(result, t)
+		}
+	}
+	if len(result) > 4 {
+		result = result[:4]
+	}
+	return result
 }
 
 const groqPrompt = `You are a dictionary API. For the given English word, return a JSON object with exactly this structure:
@@ -71,7 +99,8 @@ const groqPrompt = `You are a dictionary API. For the given English word, return
 "part_of_speech": "noun|verb|adjective|adverb|etc",
 "definitions": ["definition 1", "definition 2"],
 "examples": ["example sentence 1", "example sentence 2"],
-"synonyms": ["synonym1", "synonym2", "synonym3"]
+"synonyms": ["synonym1", "synonym2", "synonym3"],
+"tags": ["tag1", "tag2"]
 }
 
 Rules:
@@ -79,6 +108,9 @@ Rules:
 - definitions: 1-3 short English definitions
 - examples: 2-3 natural example sentences using the word
 - synonyms: 3-5 English synonyms
+- tags: select 2-4 tags from the lists below ONLY. Do not invent new tags.
+  Thematic (up to 3): travel, business, food, technology, nature, health, emotions, sport, education, law, finance, politics, art, music, science, fashion, family, society, religion, home, animals, weather, time, body, culture
+  Register (up to 1): formal, informal, slang, academic, literary
 - Return ONLY valid JSON, no markdown, no explanation, no backticks
 
 Word: %s`
@@ -198,5 +230,6 @@ func (s *GroqService) EnrichWord(ctx context.Context, word string) (*domain.Word
 		Definitions:   result.Definitions,
 		Examples:      result.Examples,
 		Synonyms:      result.Synonyms,
+		Tags:          normalizeTags(result.Tags),
 	}, nil
 }

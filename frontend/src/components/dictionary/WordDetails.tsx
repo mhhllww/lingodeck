@@ -3,6 +3,7 @@
 import { Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SynonymsBlock } from './SynonymsBlock';
 import { useSpeech } from '@/hooks/useSpeech';
@@ -87,6 +88,16 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {entry.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {entry.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
         </div>
       )}
 
