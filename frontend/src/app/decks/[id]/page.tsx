@@ -6,14 +6,14 @@ import { Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { DeckHero } from '@/components/decks/DeckHero';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks, useAllCards, useUpdateDeck } from '@/hooks/useCardsQuery';
 
 export default function DeckDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const decks = useCardStore((s) => s.decks);
-  const cards = useCardStore((s) => s.cards);
-  const updateDeck = useCardStore((s) => s.updateDeck);
+  const { data: decks = [] } = useDecks();
+  const { data: cards = [] } = useAllCards();
+  const updateDeck = useUpdateDeck();
 
   const deck = decks.find((d) => d.id === id);
   const deckCards = useMemo(() => cards.filter((c) => c.deckId === id), [cards, id]);
@@ -35,7 +35,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
       <DeckHero
         deck={deck}
         deckCards={deckCards}
-        onUpdateDeck={(data) => updateDeck(id, data)}
+        onUpdateDeck={(data) => updateDeck.mutate({ id, data })}
         onStudy={() => router.push(`/decks/${id}/study`)}
         onBack={() => router.push('/decks')}
       />

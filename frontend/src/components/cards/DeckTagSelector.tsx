@@ -5,7 +5,9 @@ import { Check, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useCardStore, DECK_COLORS, createDeckOnBackend } from '@/store/useCardStore';
+import { DECK_COLORS } from '@/store/useCardStore';
+import { useCardStore } from '@/store/useCardStore';
+import { useDecks, useCreateDeck } from '@/hooks/useCardsQuery';
 import { cn } from '@/lib/utils';
 import type { Deck } from '@/types/card';
 
@@ -16,7 +18,9 @@ interface DeckTagSelectorProps {
 }
 
 export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelectorProps) {
-  const { decks, lastUsedDeckId } = useCardStore();
+  const { data: decks = [] } = useDecks();
+  const lastUsedDeckId = useCardStore((s) => s.lastUsedDeckId);
+  const createDeck = useCreateDeck();
 
   const [inputValue, setInputValue] = useState('');
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(lastUsedDeckId);
@@ -62,7 +66,7 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
     const name = inputValue.trim();
     if (!name) return;
     const color = DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)];
-    const deck = await createDeckOnBackend({ name, tags: [], color });
+    const deck = await createDeck.mutateAsync({ name, tags: [], color });
     handleSelectDeck(deck);
   };
 
@@ -106,7 +110,6 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
     onSave({ deckId: selectedDeckId, tags: selectedTags });
   };
 
-  // Available tags to show as chips: deck tags + suggestedTags (deduped)
   const availableTags = useMemo(() => {
     const deckTags = selectedDeck?.tags ?? [];
     return [...new Set([...deckTags, ...suggestedTags])];
@@ -114,7 +117,6 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
 
   return (
     <div className="flex flex-col gap-0">
-      {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-[var(--border)]">
         <p className="text-xs font-medium text-[var(--muted-foreground)] mb-2">Save to deck</p>
         <Input
@@ -130,7 +132,6 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
         />
       </div>
 
-      {/* Deck list */}
       {options.length > 0 && (
         <ul
           ref={listRef}
@@ -187,7 +188,6 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
         </ul>
       )}
 
-      {/* Tag chips */}
       {availableTags.length > 0 && (
         <div className="px-4 py-3 border-t border-[var(--border)]">
           <p className="text-xs text-[var(--muted-foreground)] mb-2">Tags</p>
@@ -211,7 +211,6 @@ export function DeckTagSelector({ suggestedTags, onSave, onClose }: DeckTagSelec
         </div>
       )}
 
-      {/* Footer actions */}
       <div className="px-4 py-3 border-t border-[var(--border)] flex flex-col gap-2">
         <Button size="sm" className="w-full" onClick={handleSave} disabled={!selectedDeckId}>
           {selectedDeck ? `Save to "${selectedDeck.name}"` : 'Save to Cards'}

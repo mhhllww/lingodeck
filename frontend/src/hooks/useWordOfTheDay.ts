@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWordOfTheDay, addWordOfTheDayToDeck } from '@/lib/api/daily';
-import { useCardStore } from '@/store/useCardStore';
+import { CARDS_KEY } from './useCardsQuery';
 
 export function useWordOfTheDay() {
   return useQuery({
@@ -12,12 +12,11 @@ export function useWordOfTheDay() {
 
 export function useAddWordOfTheDay() {
   const queryClient = useQueryClient();
-  const addCard = useCardStore((s) => s.addCard);
 
   return useMutation({
     mutationFn: (deckId: number) => addWordOfTheDayToDeck(deckId),
-    onSuccess: (card) => {
-      addCard(card);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CARDS_KEY });
       queryClient.invalidateQueries({ queryKey: ['word-of-the-day'] });
     },
   });

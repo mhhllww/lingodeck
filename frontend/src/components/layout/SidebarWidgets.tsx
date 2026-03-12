@@ -6,7 +6,7 @@ import { Sparkles, Zap, CheckCircle2, PlayCircle, Volume2 } from 'lucide-react';
 import { useWordOfTheDay } from '@/hooks/useWordOfTheDay';
 import { useDailyMix } from '@/hooks/useDailyMix';
 import { useDailyStudyStore } from '@/store/useDailyStudyStore';
-import { useCardStore } from '@/store/useCardStore';
+import { useAllCards } from '@/hooks/useCardsQuery';
 import { SaveCardButton } from '@/components/cards/SaveCardButton';
 import { useSpeech } from '@/hooks/useSpeech';
 
@@ -14,7 +14,7 @@ import { useSpeech } from '@/hooks/useSpeech';
 
 function WordOfTheDayWidget() {
   const { data, isLoading, isError } = useWordOfTheDay();
-  const cards = useCardStore((s) => s.cards);
+  const { data: cards = [] } = useAllCards();
   const { speak, isSpeaking, isSupported } = useSpeech();
   const [translationRevealed, setTranslationRevealed] = useState(false);
 
@@ -41,6 +41,7 @@ function WordOfTheDayWidget() {
   }
 
   // Check locally so deletion immediately reflects
+  const isSaved = cards.some((c) => c.word.toLowerCase() === data.word.toLowerCase());
 
   return (
     <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-3 space-y-2">
@@ -93,19 +94,21 @@ function WordOfTheDayWidget() {
         </p>
       )}
 
-      <SaveCardButton
-        size="sm"
-        cardData={{
-          word: data.word,
-          translation: data.translation,
-          transcription: data.transcription,
-          partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
-          definitions: data.definition ? [data.definition] : undefined,
-          examples: data.examples?.length ? data.examples : undefined,
-          synonyms: data.synonyms?.length ? data.synonyms : undefined,
-        }}
-        suggestedTags={[]}
-      />
+      {!isSaved && (
+        <SaveCardButton
+          size="sm"
+          cardData={{
+            word: data.word,
+            translation: data.translation,
+            transcription: data.transcription,
+            partOfSpeech: data.part_of_speech ? [data.part_of_speech] : undefined,
+            definitions: data.definition ? [data.definition] : undefined,
+            examples: data.examples?.length ? data.examples : undefined,
+            synonyms: data.synonyms?.length ? data.synonyms : undefined,
+          }}
+          suggestedTags={[]}
+        />
+      )}
     </div>
   );
 }
@@ -162,7 +165,6 @@ function DailyMixWidget() {
         <span className="text-[10px] font-semibold uppercase tracking-wider">Daily Mix</span>
       </div>
 
-      {/* Word chips */}
       <div className="flex flex-wrap gap-1">
         {preview.map((c) => (
           <span
@@ -177,7 +179,6 @@ function DailyMixWidget() {
         )}
       </div>
 
-      {/* Progress bar */}
       <div className="space-y-1">
         <div className="flex justify-between text-[10px] text-[var(--muted-foreground)]">
           <span>{done}/{total} done</span>
@@ -191,7 +192,6 @@ function DailyMixWidget() {
         </div>
       </div>
 
-      {/* CTA button */}
       <button
         onClick={handleStart}
         disabled={isDone}

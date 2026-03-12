@@ -10,9 +10,8 @@ import { SessionStart } from '@/components/study/SessionStart';
 import { StudyCard } from '@/components/study/StudyCard';
 import { SessionResults } from '@/components/study/SessionResults';
 import { useStudySession } from '@/hooks/useStudySession';
-import { useCardStore } from '@/store/useCardStore';
+import { useDecks, useAllCards, useBulkUpdateStudyStats } from '@/hooks/useCardsQuery';
 
-// Card transition variants
 const cardVariants = {
   initial: { opacity: 0, scale: 0.95 },
   animate: { opacity: 1, scale: 1, transition: { duration: 0.25 } },
@@ -22,7 +21,9 @@ const cardVariants = {
 export default function StudyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { decks, cards, bulkUpdateStudyStats } = useCardStore();
+  const { data: decks = [] } = useDecks();
+  const { data: cards = [] } = useAllCards();
+  const bulkUpdateStudyStats = useBulkUpdateStudyStats();
 
   const deck = decks.find((d) => d.id === id);
   const deckCards = cards.filter((c) => c.deckId === id);
@@ -43,7 +44,6 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
   const [cardKey, setCardKey] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Persist stats once when results phase is reached
   const statsApplied = useRef(false);
   useEffect(() => {
     if (phase === 'results' && !statsApplied.current) {
@@ -63,7 +63,6 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
     markAgain();
   }, [markAgain]);
 
-  // Keyboard shortcuts — G = Got it, A = Again (no flip guard needed)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (phase !== 'studying') return;
@@ -100,7 +99,6 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // ── Start view ───────────────────────────────────────────
   if (phase === 'idle') {
     return (
       <SessionStart
@@ -112,7 +110,6 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // ── Results view ─────────────────────────────────────────
   if (phase === 'results') {
     const totalAgainPresses = Object.values(againCounts).reduce((sum, n) => sum + n, 0);
     return (
@@ -127,7 +124,6 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
     );
   }
 
-  // ── Studying view ─────────────────────────────────────────
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -135,10 +131,8 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
       transition={{ duration: 0.25 }}
       className="max-w-md mx-auto space-y-6 px-2"
     >
-      {/* Top bar */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4">
-          {/* Exit button + inline confirm */}
           <div className="relative">
             <Button
               variant="ghost"
@@ -186,11 +180,9 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
           </div>
         </div>
 
-        {/* Fix 2: progress = gotIt.length / totalCards */}
         <ProgressBar value={gotIt.length} max={totalCards} />
       </div>
 
-      {/* Card with enter/exit animations */}
       <AnimatePresence mode="wait">
         {currentCard && (
           <motion.div

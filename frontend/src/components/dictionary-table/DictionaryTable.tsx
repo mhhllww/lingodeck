@@ -29,7 +29,7 @@ import {DeckFilterDropdown} from '@/components/ui/deck-filter-dropdown';
 import {CreateCardModal} from '@/components/cards/CreateCardModal';
 import {useCards} from '@/hooks/useCards';
 import {useSpeech} from '@/hooks/useSpeech';
-import {useCardStore} from '@/store/useCardStore';
+import { useDecks } from '@/hooks/useCardsQuery';
 import {useToast} from '@/components/ui/toast';
 import type {VocabularyCard} from '@/types/card';
 
@@ -57,7 +57,7 @@ function SortHeader({label, column}: { label: string; column: Column<VocabularyC
 export function DictionaryTable() {
     const {allCards, deleteCard} = useCards();
     const {speak} = useSpeech();
-    const decks = useCardStore((s) => s.decks);
+    const { data: decks = [] } = useDecks();
     const {toast} = useToast();
     const router = useRouter();
 

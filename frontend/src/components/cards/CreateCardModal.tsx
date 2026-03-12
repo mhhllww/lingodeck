@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DeckPickerDropdown } from '@/components/ui/deck-filter-dropdown';
 import { useCards } from '@/hooks/useCards';
-import { useCardStore, createCardOnBackend } from '@/store/useCardStore';
+import { useDecks, useCreateCard } from '@/hooks/useCardsQuery';
 import { useToast } from '@/components/ui/toast';
 import type { VocabularyCard } from '@/types/card';
 
@@ -28,7 +28,8 @@ const EMPTY_FORM = {
 
 export function CreateCardModal({ open, onOpenChange, editCard, deckId }: CreateCardModalProps) {
   const { updateCard } = useCards();
-  const decks = useCardStore((s) => s.decks);
+  const { data: decks = [] } = useDecks();
+  const createCard = useCreateCard();
   const { toast } = useToast();
   const isEdit = !!editCard;
 
@@ -103,7 +104,7 @@ export function CreateCardModal({ open, onOpenChange, editCard, deckId }: Create
       });
       toast({ title: 'Card updated', variant: 'success' });
     } else {
-      createCardOnBackend({
+      createCard.mutate({
         word: form.word.trim(),
         translation: form.translation.trim(),
         transcription: form.transcription.trim() || undefined,

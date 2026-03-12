@@ -2,10 +2,12 @@
 
 import { useAuthStore } from '@/store/useAuthStore';
 import { loginApi, registerApi, logoutApi } from '@/lib/api/auth';
+import { useQueryClient } from '@tanstack/react-query';
 import type { LoginPayload, RegisterPayload } from '@/types/auth';
 
 export function useAuth() {
-  const { user, isLoading, setUser, logout: clearStore } = useAuthStore();
+  const { user, isLoading, setUser, logout: clearAuthStore } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const login = async (payload: LoginPayload) => {
     const user = await loginApi(payload);
@@ -19,7 +21,8 @@ export function useAuth() {
 
   const logout = async () => {
     await logoutApi();
-    clearStore();
+    queryClient.clear();
+    clearAuthStore();
   };
 
   return {
