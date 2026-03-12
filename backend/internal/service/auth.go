@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -68,7 +69,13 @@ func NewAuthService(
 		Scopes:       []string{"openid", "email", "profile"},
 		Endpoint:     google.Endpoint,
 	}
-	proxyURL, _ := url.Parse(os.Getenv("HTTPS_PROXY"))
+	proxyRaw := os.Getenv("HTTPS_PROXY")
+	proxyURL, _ := url.Parse(proxyRaw)
+	if proxyRaw != "" {
+		slog.Info("google oauth: proxy enabled", "proxy", proxyRaw)
+	} else {
+		slog.Info("google oauth: no proxy configured")
+	}
 	proxyClient := &http.Client{
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
 	}
@@ -280,15 +287,22 @@ func (s *AuthServiceImpl) Logout(ctx context.Context, refreshToken string) error
 }
 
 func (s *AuthServiceImpl) GoogleCallback(ctx context.Context, code string) (*domain.AuthResult, error) {
+	slog.Info("google oauth: callback received")
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, s.proxyClient)
+
+	slog.Info("google oauth: exchanging code for token")
 	oauthToken, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
+		slog.Error("google oauth: token exchange failed", "error", err)
 		return nil, fmt.Errorf("oauth exchange: %w", err)
 	}
+	slog.Info("google oauth: token exchange successful")
 
 	client := s.oauthConfig.Client(ctx, oauthToken)
+	slog.Info("google oauth: fetching userinfo")
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
+		slog.Error("google oauth: userinfo fetch failed", "error", err)
 		return nil, fmt.Errorf("userinfo fetch: %w", err)
 	}
 	defer resp.Body.Close()
@@ -305,8 +319,10 @@ func (s *AuthServiceImpl) GoogleCallback(ctx context.Context, code string) (*dom
 		AvatarURL string `json:"picture"`
 	}
 	if err := json.Unmarshal(body, &info); err != nil {
+		slog.Error("google oauth: failed to decode userinfo", "error", err)
 		return nil, err
 	}
+	slog.Info("google oauth: userinfo received", "email", info.Email)
 
 	user, err := s.repo.GetByProviderID(ctx, "google", info.ID)
 	if err != nil {
@@ -318,6 +334,7 @@ func (s *AuthServiceImpl) GoogleCallback(ctx context.Context, code string) (*dom
 			return nil, err
 		}
 		if user != nil {
+			slog.Info("google oauth: linking google provider to existing account", "email", info.Email)
 			user.Provider = "google"
 			user.ProviderID = &info.ID
 			if user.AvatarURL == nil && info.AvatarURL != "" {
@@ -329,6 +346,7 @@ func (s *AuthServiceImpl) GoogleCallback(ctx context.Context, code string) (*dom
 		}
 	}
 	if user == nil {
+		slog.Info("google oauth: creating new user", "email", info.Email)
 		newUser := &domain.User{
 			Email:         info.Email,
 			Name:          info.Name,
