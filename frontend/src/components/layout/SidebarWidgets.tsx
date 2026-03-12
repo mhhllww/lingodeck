@@ -52,19 +52,19 @@ function WordOfTheDayWidget() {
 
       <div>
         <div className="flex items-center gap-2">
-          <span className="font-bold text-base text-[var(--foreground)]">{data.word}</span>
+          <span className="font-semibold text-sm text-[var(--foreground)]">{data.word}</span>
           {isSupported && (
             <button
               onClick={() => speak(data.word)}
               className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
               aria-label="Pronounce word"
             >
-              <Volume2 className={`h-3.5 w-3.5 ${isSpeaking ? 'text-[var(--accent)]' : ''}`} />
+              <Volume2 className={`h-3 w-3 ${isSpeaking ? 'text-[var(--accent)]' : ''}`} />
             </button>
           )}
         </div>
         {data.transcription && (
-          <div className="text-xs text-[var(--muted-foreground)] font-mono">{data.transcription}</div>
+          <div className="text-[10px] text-[var(--muted-foreground)] font-mono">{data.transcription}</div>
         )}
         {data.part_of_speech && (
           <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-[var(--accent)]/10 text-[var(--accent)]">
@@ -74,15 +74,15 @@ function WordOfTheDayWidget() {
         {data.translation && (
           <button
             onClick={() => setTranslationRevealed((v) => !v)}
-            className="mt-1.5 text-left block"
+            className="mt-1 text-left block"
             aria-label={translationRevealed ? 'Hide translation' : 'Reveal translation'}
           >
             {translationRevealed ? (
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-[11px] font-medium text-[var(--foreground)]">
                 {data.translation}
               </span>
             ) : (
-              <span className="text-xs text-[var(--accent)] hover:underline transition-colors">
+              <span className="text-[10px] text-[var(--accent)] hover:underline transition-colors">
                 Tap to check translation
               </span>
             )}
@@ -91,7 +91,7 @@ function WordOfTheDayWidget() {
       </div>
 
       {data.definition && (
-        <p className="text-xs text-[var(--text-secondary)] leading-snug line-clamp-2">
+        <p className="text-[11px] text-[var(--text-secondary)] leading-snug line-clamp-2">
           {data.definition}
         </p>
       )}
