@@ -1,6 +1,6 @@
 'use client';
 
-import { Volume2 } from 'lucide-react';
+import { Volume2, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,12 +92,18 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
       )}
 
       {entry.tags?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {entry.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
+        <div className="space-y-1.5">
+          <h4 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            Tags
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {entry.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs gap-1">
+                <span className="opacity-40">#</span>{tag}
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 
