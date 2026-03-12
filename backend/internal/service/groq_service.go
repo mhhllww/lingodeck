@@ -34,7 +34,7 @@ func NewGroqService(apiKey string) *GroqService {
 	return &GroqService{
 		apiKey: apiKey,
 		client: &http.Client{
-			Timeout:   10 * time.Second,
+			Timeout:   30 * time.Second,
 			Transport: transport,
 		},
 	}
