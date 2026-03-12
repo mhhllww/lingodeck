@@ -67,9 +67,7 @@ function WordOfTheDayWidget() {
           <div className="text-[10px] text-[var(--muted-foreground)] font-mono">{data.transcription}</div>
         )}
         {data.part_of_speech && (
-          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-[var(--accent)]/10 text-[var(--accent)]">
-            {data.part_of_speech}
-          </span>
+          <div className="text-[10px] italic text-[var(--muted-foreground)]">{data.part_of_speech}</div>
         )}
         {data.translation && (
           <button
