@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getTagClasses } from '@/lib/tagColors';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useDecks } from '@/hooks/useCardsQuery';
 import type { VocabularyCard } from '@/types/card';
@@ -173,7 +174,18 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <p className="text-xs text-[var(--muted-foreground)]">Move cursor away to see word</p>
+          <div className="flex items-center justify-between gap-2">
+            {card.tags && card.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {card.tags.map((tag) => (
+                  <span key={tag} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
+                    <span className="opacity-40">#</span>{tag}
+                  </span>
+                ))}
+              </div>
+            ) : <span />}
+            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Move cursor away to see word</p>
+          </div>
         </div>
       </motion.div>
     </div>
