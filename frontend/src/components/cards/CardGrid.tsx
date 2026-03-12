@@ -17,9 +17,10 @@ import type { VocabularyCard } from '@/types/card';
 
 interface CardGridProps {
   deckId?: string;
+  viewToggle?: React.ReactNode;
 }
 
-export function CardGrid({ deckId }: CardGridProps = {}) {
+export function CardGrid({ deckId, viewToggle }: CardGridProps = {}) {
   const { cards: filteredCards, allCards, filters, deleteCard, setFilters } = useCards();
   const { data: decks = [] } = useDecks();
   const cards = deckId ? filteredCards.filter((c) => c.deckId === deckId) : filteredCards;
@@ -71,17 +72,12 @@ export function CardGrid({ deckId }: CardGridProps = {}) {
               {!filters.query && <span className="ml-2 opacity-50">— start typing to search</span>}
             </p>
           </div>
-          {deckId && (
-            <Button variant="outline" onClick={() => setAddToDeckOpen(true)} className="gap-2 shrink-0">
-              <FolderInput className="h-4 w-4" />
-              <span className="hidden sm:inline">Add existing</span>
-            </Button>
-          )}
+          {viewToggle}
         </div>
       )}
 
       {allDeckCards.length > 0 && (
-        <CardFilters filters={filters} allTags={allTags} decks={decks} onChange={setFilters} />
+        <CardFilters filters={filters} allTags={allTags} decks={deckId ? [] : decks} onChange={setFilters} />
       )}
 
       {cards.length > 0 ? (
