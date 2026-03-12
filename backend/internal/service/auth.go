@@ -10,6 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -49,6 +52,7 @@ type AuthServiceImpl struct {
 	emailSvc    domain.EmailService
 	jwtSecret   []byte
 	oauthConfig *oauth2.Config
+	proxyClient *http.Client
 }
 
 func NewAuthService(
@@ -64,12 +68,17 @@ func NewAuthService(
 		Scopes:       []string{"openid", "email", "profile"},
 		Endpoint:     google.Endpoint,
 	}
+	proxyURL, _ := url.Parse(os.Getenv("HTTPS_PROXY"))
+	proxyClient := &http.Client{
+		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
+	}
 	return &AuthServiceImpl{
 		repo:        repo,
 		tokenRepo:   tokenRepo,
 		emailSvc:    emailSvc,
 		jwtSecret:   []byte(jwtSecret),
 		oauthConfig: oauthCfg,
+		proxyClient: proxyClient,
 	}
 }
 
@@ -271,6 +280,7 @@ func (s *AuthServiceImpl) Logout(ctx context.Context, refreshToken string) error
 }
 
 func (s *AuthServiceImpl) GoogleCallback(ctx context.Context, code string) (*domain.AuthResult, error) {
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, s.proxyClient)
 	oauthToken, err := s.oauthConfig.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("oauth exchange: %w", err)
