@@ -53,7 +53,7 @@ function DeckCard({
           <div className="flex items-center gap-2 min-w-0">
             <ColorPicker
               value={deck.color}
-              onChange={(color) => { setPreviewColor(null); updateDeck.mutate({ id: deck.id, data: { color } }); }}
+              onChange={(color) => { setPreviewColor(null); updateDeck.mutate({ id: deck.id, data: { name: deck.name, color, description: deck.description } }); }}
               onPreview={handlePreview}
             />
             <h3 className="font-semibold text-[var(--foreground)] text-base leading-tight truncate">

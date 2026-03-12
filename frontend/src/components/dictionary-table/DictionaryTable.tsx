@@ -55,8 +55,17 @@ function SortHeader({label, column}: { label: string; column: Column<VocabularyC
     );
 }
 
-export function DictionaryTable() {
-    const {allCards, deleteCard} = useCards();
+interface DictionaryTableProps {
+    deckId?: string;
+    viewToggle?: React.ReactNode;
+}
+
+export function DictionaryTable({ deckId, viewToggle }: DictionaryTableProps = {}) {
+    const {allCards: rawCards, deleteCard} = useCards();
+    const allCards = useMemo(
+        () => deckId ? rawCards.filter((c) => c.deckId === deckId) : rawCards,
+        [rawCards, deckId]
+    );
     const {speak} = useSpeech();
     const { data: decks = [] } = useDecks();
     const {toast} = useToast();
@@ -324,16 +333,19 @@ export function DictionaryTable() {
                         {allCards.length} {allCards.length === 1 ? 'word' : 'words'} saved
                         <span className="ml-2 opacity-50">— start typing to search</span>
                     </p>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleBulkDelete}
-                        disabled={selectedCount === 0}
-                        title={selectedCount > 0 ? `Delete ${selectedCount} ${selectedCount === 1 ? 'word' : 'words'}` : 'Select words to delete'}
-                        className="text-[var(--muted-foreground)] hover:text-[var(--destructive)] shrink-0"
-                    >
-                        <Trash2 className="h-4 w-4"/>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={handleBulkDelete}
+                            disabled={selectedCount === 0}
+                            title={selectedCount > 0 ? `Delete ${selectedCount} ${selectedCount === 1 ? 'word' : 'words'}` : 'Select words to delete'}
+                            className="text-[var(--muted-foreground)] hover:text-[var(--destructive)] shrink-0"
+                        >
+                            <Trash2 className="h-4 w-4"/>
+                        </Button>
+                        {viewToggle}
+                    </div>
                 </div>
             )}
 
@@ -347,7 +359,7 @@ export function DictionaryTable() {
                         filteredCount={table.getFilteredRowModel().rows.length}
                         disabled={modalOpen}
                     />
-                    {decks.length > 0 && (
+                    {!deckId && decks.length > 0 && (
                         <DeckFilterDropdown
                             decks={decks}
                             selectedIds={activeDeckIdsList}

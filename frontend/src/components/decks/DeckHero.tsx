@@ -12,6 +12,7 @@ interface DeckHeroProps {
   onUpdateDeck: (data: Partial<Omit<Deck, 'id' | 'createdAt'>>) => void;
   onStudy: () => void;
   onBack: () => void;
+  addButton?: React.ReactNode;
 }
 
 function formatRelativeDate(dateStr: string): string {
@@ -26,7 +27,7 @@ function formatRelativeDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
-export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack }: DeckHeroProps) {
+export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack, addButton }: DeckHeroProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [nameValue, setNameValue] = useState(deck.name);
   const [descValue, setDescValue] = useState(deck.description ?? '');
@@ -89,32 +90,38 @@ export function DeckHero({ deck, deckCards, onUpdateDeck, onStudy, onBack }: Dec
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex items-center gap-2">
-            <ColorPicker
-              value={deck.color}
-              onChange={(color) => onUpdateDeck({ color })}
-            />
-            {isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={saveAndExit}
-                className="text-white/80 hover:text-white hover:bg-white/10"
-                aria-label="Save changes"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setIsEditing(true)}
-                className="text-white/80 hover:text-white hover:bg-white/10"
-                aria-label="Edit deck"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="h-7 w-7 flex items-center justify-center">
+                <ColorPicker
+                  value={deck.color}
+                  onChange={(color) => onUpdateDeck({ color })}
+                  size="h-4 w-4"
+                />
+              </div>
+              {isEditing ? (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={saveAndExit}
+                  className="text-white/80 hover:text-white hover:bg-white/10"
+                  aria-label="Save changes"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setIsEditing(true)}
+                  className="text-white/80 hover:text-white hover:bg-white/10"
+                  aria-label="Edit deck"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {addButton}
+            </div>
             <Button
               size="sm"
               className="gap-2 bg-white/20 hover:bg-white/30 text-white border-0"
