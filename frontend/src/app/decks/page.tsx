@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Layers, X, BookOpen, Trash2, BookMarked } from 'lucide-react';
+import { SearchPalette } from '@/components/search/SearchPalette';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -185,6 +186,13 @@ export default function DecksPage() {
   const { data: decks = [] } = useDecks();
   const { data: cards = [] } = useAllCards();
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDecks = decks.filter((d) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return d.name.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q);
+  });
 
   const cardCountByDeck = (deckId: string) =>
     cards.filter((c) => c.deckId === deckId).length;
@@ -202,9 +210,6 @@ export default function DecksPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Decks</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
-          </p>
         </div>
       </div>
 
@@ -222,9 +227,25 @@ export default function DecksPage() {
           </Button>
         </div>
       ) : (
+        <>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-1.5 flex-1">
+            <SearchPalette
+              value={searchQuery}
+              onChange={setSearchQuery}
+              totalCount={decks.length}
+              filteredCount={filteredDecks.length}
+              disabled={modalOpen}
+            />
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {decks.length} {decks.length === 1 ? 'deck' : 'decks'} saved
+              {!searchQuery && <span className="ml-2 opacity-50">— start typing to search</span>}
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <AnimatePresence mode="popLayout">
-            {decks.map((deck) => (
+            {filteredDecks.map((deck) => (
               <DeckCard
                 key={deck.id}
                 deck={deck}
@@ -234,6 +255,7 @@ export default function DecksPage() {
             ))}
           </AnimatePresence>
         </div>
+        </>
       )}
 
       <CreateDeckModal open={modalOpen} onOpenChange={setModalOpen} />
