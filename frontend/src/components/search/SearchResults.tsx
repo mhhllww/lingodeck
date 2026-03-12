@@ -38,7 +38,7 @@ function buildCardData(
       examples: word.examples,
       synonyms: word.synonyms,
     },
-    suggestedTags: partOfSpeech,
+    suggestedTags: word.tags?.length ? word.tags : partOfSpeech,
   };
 }
 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getTagClasses } from '@/lib/tagColors';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useDecks } from '@/hooks/useCardsQuery';
 import type { VocabularyCard } from '@/types/card';
@@ -132,16 +133,26 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-end justify-between gap-2">
             {deck ? (
-              <span className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] truncate">
+              <span className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] truncate shrink-0">
                 <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: deck.color }} />
                 {deck.name}
               </span>
             ) : (
               <span />
             )}
-            <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+            {card.tags && card.tags.length > 0 ? (
+              <div className="flex flex-wrap justify-end gap-1">
+                {card.tags.slice(0, 3).map((tag) => (
+                  <span key={tag} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}>
+                    <span className="opacity-40">#</span>{tag}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+            )}
           </div>
         </div>
 

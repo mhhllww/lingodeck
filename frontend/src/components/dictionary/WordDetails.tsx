@@ -1,12 +1,14 @@
 'use client';
 
-import { Volume2 } from 'lucide-react';
+import { Volume2, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SynonymsBlock } from './SynonymsBlock';
 import { useSpeech } from '@/hooks/useSpeech';
 import { MAX_DEFINITIONS, MAX_EXAMPLES, MAX_SYNONYMS } from '@/lib/constants';
+import { getTagClasses } from '@/lib/tagColors';
 import type { WordResponse } from '@/types/dictionary';
 
 interface WordDetailsProps {
@@ -85,6 +87,25 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
                   </p>
                 )}
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {entry.tags?.length > 0 && (
+        <div className="space-y-1.5">
+          <h4 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            Tags
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {entry.tags.map((tag) => (
+              <span
+                key={tag}
+                className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}
+              >
+                <span className="opacity-40">#</span>{tag}
+              </span>
             ))}
           </div>
         </div>

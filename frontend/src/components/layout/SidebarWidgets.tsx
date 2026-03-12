@@ -51,11 +51,8 @@ function WordOfTheDayWidget() {
       </div>
 
       <div>
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
           <span className="font-semibold text-sm text-[var(--foreground)]">{data.word}</span>
-          {data.transcription && (
-            <span className="text-[10px] text-[var(--muted-foreground)]">{data.transcription}</span>
-          )}
           {isSupported && (
             <button
               onClick={() => speak(data.word)}
@@ -66,13 +63,16 @@ function WordOfTheDayWidget() {
             </button>
           )}
         </div>
+        {data.transcription && (
+          <div className="text-[10px] text-[var(--muted-foreground)] font-mono">{data.transcription}</div>
+        )}
         {data.part_of_speech && (
           <div className="text-[10px] italic text-[var(--muted-foreground)]">{data.part_of_speech}</div>
         )}
         {data.translation && (
           <button
             onClick={() => setTranslationRevealed((v) => !v)}
-            className="mt-1 text-left"
+            className="mt-1 text-left block"
             aria-label={translationRevealed ? 'Hide translation' : 'Reveal translation'}
           >
             {translationRevealed ? (

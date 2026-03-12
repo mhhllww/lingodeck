@@ -6,5 +6,6 @@ export interface WordResponse {
   definitions: string[];
   examples: string[];
   synonyms: string[];
+  tags: string[];
   created_at: string;
 }
