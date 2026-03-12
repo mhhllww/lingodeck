@@ -10,6 +10,39 @@ import { useSpeech } from '@/hooks/useSpeech';
 import { MAX_DEFINITIONS, MAX_EXAMPLES, MAX_SYNONYMS } from '@/lib/constants';
 import type { WordResponse } from '@/types/dictionary';
 
+const TAG_COLORS: Record<string, string> = {
+  travel:     'bg-sky-500/15 text-sky-600 dark:text-sky-400',
+  business:   'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
+  food:       'bg-orange-500/15 text-orange-600 dark:text-orange-400',
+  technology: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
+  nature:     'bg-green-500/15 text-green-600 dark:text-green-400',
+  health:     'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  emotions:   'bg-pink-500/15 text-pink-600 dark:text-pink-400',
+  sport:      'bg-red-500/15 text-red-600 dark:text-red-400',
+  education:  'bg-violet-500/15 text-violet-600 dark:text-violet-400',
+  law:        'bg-slate-500/15 text-slate-600 dark:text-slate-400',
+  finance:    'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
+  politics:   'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+  art:        'bg-purple-500/15 text-purple-600 dark:text-purple-400',
+  music:      'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400',
+  science:    'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+  fashion:    'bg-rose-400/15 text-rose-500 dark:text-rose-400',
+  family:     'bg-teal-500/15 text-teal-600 dark:text-teal-400',
+  society:    'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+  religion:   'bg-stone-500/15 text-stone-600 dark:text-stone-400',
+  home:       'bg-lime-500/15 text-lime-600 dark:text-lime-400',
+  animals:    'bg-green-400/15 text-green-500 dark:text-green-400',
+  weather:    'bg-sky-400/15 text-sky-500 dark:text-sky-400',
+  time:       'bg-gray-500/15 text-gray-600 dark:text-gray-400',
+  body:       'bg-pink-400/15 text-pink-500 dark:text-pink-400',
+  culture:    'bg-purple-400/15 text-purple-500 dark:text-purple-400',
+  formal:     'bg-slate-500/15 text-slate-600 dark:text-slate-400',
+  informal:   'bg-orange-400/15 text-orange-500 dark:text-orange-400',
+  slang:      'bg-yellow-400/15 text-yellow-600 dark:text-yellow-400',
+  academic:   'bg-indigo-400/15 text-indigo-500 dark:text-indigo-400',
+  literary:   'bg-violet-400/15 text-violet-500 dark:text-violet-400',
+};
+
 interface WordDetailsProps {
   entry: WordResponse;
   onWordClick?: (word: string) => void;
@@ -99,9 +132,12 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
           </h4>
           <div className="flex flex-wrap gap-1.5">
             {entry.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs gap-1">
+              <span
+                key={tag}
+                className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${TAG_COLORS[tag] ?? 'bg-[var(--muted)] text-[var(--muted-foreground)]'}`}
+              >
                 <span className="opacity-40">#</span>{tag}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
