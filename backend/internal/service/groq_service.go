@@ -59,6 +59,7 @@ type groqResponse struct {
 }
 
 type groqWordResult struct {
+	Valid         bool     `json:"valid"`
 	Transcription string   `json:"transcription"`
 	PartOfSpeech  string   `json:"part_of_speech"`
 	Definitions   []string `json:"definitions"`
@@ -96,13 +97,17 @@ func normalizeTags(raw []string) []string {
 
 const groqPrompt = `You are a dictionary API. For the given English word, return a JSON object with exactly this structure:
 {
-"transcription": "IPA transcription",
-"part_of_speech": "noun|verb|adjective|adverb|etc",
-"definitions": ["definition 1", "definition 2"],
-"examples": ["example sentence 1", "example sentence 2"],
-"synonyms": ["synonym1", "synonym2", "synonym3"],
-"tags": ["tag1", "tag2"]
+  "valid": true,
+  "transcription": "IPA transcription",
+  "part_of_speech": "noun|verb|adjective|adverb|etc",
+  "definitions": ["definition 1", "definition 2"],
+  "examples": ["example sentence 1", "example sentence 2"],
+  "synonyms": ["synonym1", "synonym2", "synonym3"],
+  "tags": ["tag1", "tag2"]
 }
+
+If the input is not a real English word, is gibberish, or has no meaningful definition, return ONLY this:
+{"valid": false}
 
 Rules:
 - transcription must be in IPA format with slashes, e.g. /ɪˈfem.ər.əl/
@@ -222,6 +227,10 @@ func (s *GroqService) EnrichWord(ctx context.Context, word string) (*domain.Word
 	var result groqWordResult
 	if err := json.Unmarshal([]byte(content), &result); err != nil {
 		return nil, fmt.Errorf("parsing Groq word data: %w", err)
+	}
+
+	if !result.Valid {
+		return nil, domain.ErrNotFound
 	}
 
 	return &domain.Word{

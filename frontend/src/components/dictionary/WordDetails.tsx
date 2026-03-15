@@ -1,12 +1,10 @@
 'use client';
 
-import { Volume2, Tag } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SynonymsBlock } from './SynonymsBlock';
-import { useSpeech } from '@/hooks/useSpeech';
 import { MAX_DEFINITIONS, MAX_EXAMPLES, MAX_SYNONYMS } from '@/lib/constants';
 import { getTagClasses } from '@/lib/tagColors';
 import type { WordResponse } from '@/types/dictionary';
@@ -31,8 +29,6 @@ function WordDetailsSkeleton() {
 }
 
 export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps) {
-  const { speak, isSpeaking, isSupported } = useSpeech();
-
   if (isLoading) return <WordDetailsSkeleton />;
 
   const definitions = entry.definitions.slice(0, MAX_DEFINITIONS);
@@ -51,17 +47,6 @@ export function WordDetails({ entry, onWordClick, isLoading }: WordDetailsProps)
           <span className="text-sm text-[var(--muted-foreground)] font-mono">
             {entry.transcription}
           </span>
-        )}
-        {isSupported && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => speak(entry.word)}
-            disabled={isSpeaking}
-            aria-label={`Pronounce ${entry.word}`}
-          >
-            <Volume2 className={`h-4 w-4 ${isSpeaking ? 'text-[var(--accent)]' : ''}`} />
-          </Button>
         )}
         {entry.part_of_speech && (
           <span className="text-sm font-semibold text-[var(--accent)] italic">
