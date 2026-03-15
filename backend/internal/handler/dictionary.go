@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
 
+	"github.com/mhlw/lingodeck/internal/domain"
 	"github.com/mhlw/lingodeck/internal/service"
 )
 
@@ -33,6 +35,10 @@ func (h *DictionaryHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 	words, err := h.svc.Search(r.Context(), q)
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			respondJSON(w, http.StatusOK, []any{})
+			return
+		}
 		slog.Error("failed to search words", "query", q, "error", err)
 		respondError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to search words")
 		return

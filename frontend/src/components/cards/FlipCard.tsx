@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, Trash2, Edit2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,31 +24,20 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
   const [showControls, setShowControls] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const { speak, isSpeaking, isSupported } = useSpeech();
-  const flipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlipped = rotation % 360 !== 0;
 
-  const handleMouseEnter = useCallback(() => {
-    setShowControls(true);
-    flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 500);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setShowControls(false);
-    if (flipTimer.current) {
-      clearTimeout(flipTimer.current);
-      flipTimer.current = null;
-    }
-    flipTimer.current = setTimeout(() => {
-      setRotation((r) => r % 360 !== 0 ? r + 180 : r);
-    }, 500);
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('[data-no-flip="true"]')) return;
+    setRotation((r) => r + 180);
   }, []);
 
   return (
     <div
       className="relative"
       style={{ perspective: '1000px', height: '220px' }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+      onClick={handleClick}
     >
       {/* Controls overlay */}
       <motion.div
@@ -56,8 +45,6 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
         animate={{ opacity: showControls && !isAnimating ? 1 : 0 }}
         className="absolute top-2 right-2 z-20 flex gap-1"
         data-no-flip="true"
-        onMouseEnter={() => { if (flipTimer.current) { clearTimeout(flipTimer.current); flipTimer.current = null; } }}
-        onMouseLeave={() => { flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 300); }}
       >
         {onAssignDeck && (
           <Button
@@ -113,8 +100,6 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
                 <button
                   data-no-flip="true"
                   onClick={(e) => { e.stopPropagation(); speak(card.word); }}
-                  onMouseEnter={() => { if (flipTimer.current) { clearTimeout(flipTimer.current); flipTimer.current = null; } }}
-                  onMouseLeave={() => { flipTimer.current = setTimeout(() => setRotation((r) => r + 180), 300); }}
                   className="text-[var(--muted-foreground)] hover:text-[var(--accent)] transition-colors"
                   aria-label={`Pronounce ${card.word}`}
                 >
@@ -151,7 +136,7 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[var(--muted-foreground)] shrink-0">Hover to flip</p>
+              <p className="text-xs text-[var(--muted-foreground)] shrink-0">Click to flip</p>
             )}
           </div>
         </div>
@@ -184,7 +169,7 @@ export function FlipCard({ card, onDelete, onEdit, onAssignDeck }: FlipCardProps
               </div>
             )}
           </div>
-          <p className="text-xs text-[var(--muted-foreground)]">Move cursor away to see word</p>
+          <p className="text-xs text-[var(--muted-foreground)]">Click to flip back</p>
         </div>
       </motion.div>
     </div>
