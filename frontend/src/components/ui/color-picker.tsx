@@ -64,7 +64,7 @@ export function ColorPicker({ value, onChange, onPreview, size = 'h-3 w-3' }: Co
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
-          className={cn(size, 'rounded-full shrink-0 cursor-pointer ring-offset-2 ring-offset-[var(--background)] hover:ring-2 hover:ring-[var(--foreground)]/30 transition-all')}
+          className={cn(size, 'rounded-full shrink-0 cursor-pointer ring-1 ring-[var(--foreground)]/20 hover:ring-2 hover:ring-[var(--foreground)]/30 transition-all')}
           style={{ backgroundColor: draft }}
           aria-label="Change color"
           onClick={(e) => e.stopPropagation()}
