@@ -77,9 +77,16 @@ function reducer(state: StudyState, action: StudyAction): StudyState {
         ...state.againCounts,
         [current.id]: (state.againCounts[current.id] ?? 0) + 1,
       };
+      const N = 3;
+      const insertAt = Math.min(N, rest.length);
+      const newQueue = [
+        ...rest.slice(0, insertAt),
+        current,
+        ...rest.slice(insertAt),
+      ];
       return {
         ...state,
-        queue: [...rest, current],
+        queue: newQueue,
         againHistory: newAgainHistory,
         againCounts: newAgainCounts,
       };
