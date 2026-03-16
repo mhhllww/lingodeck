@@ -11,6 +11,7 @@ import { StudyCard } from '@/components/study/StudyCard';
 import { SessionResults } from '@/components/study/SessionResults';
 import { useStudySession } from '@/hooks/useStudySession';
 import { useDecks, useAllCards, useBulkUpdateStudyStats } from '@/hooks/useCardsQuery';
+import { saveStudyResults } from '@/lib/api/cards';
 
 const cardVariants = {
   initial: { opacity: 0, scale: 0.95 },
@@ -49,6 +50,13 @@ export default function StudyPage({ params }: { params: Promise<{ id: string }> 
     if (phase === 'results' && !statsApplied.current) {
       statsApplied.current = true;
       bulkUpdateStudyStats(gotIt.map((c) => c.id), againCounts);
+
+      const results: { card_id: string; correct: boolean }[] = [
+        ...gotIt.map((c) => ({ card_id: c.id, correct: true })),
+        ...Object.entries(againCounts).map(([cardId]) => ({ card_id: cardId, correct: false })),
+      ];
+
+      saveStudyResults(results).catch(() => {});
     }
     if (phase !== 'results') statsApplied.current = false;
   }, [phase, gotIt, againCounts, bulkUpdateStudyStats]);
