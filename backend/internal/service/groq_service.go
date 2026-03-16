@@ -17,7 +17,7 @@ import (
 
 const (
 	groqAPIURL = "https://openrouter.ai/api/v1/chat/completions"
-	groqModel  = "qwen/qwen3-32b:free"
+	groqModel  = "meta-llama/llama-3.3-70b-instruct:free"
 )
 
 type GroqService struct {
