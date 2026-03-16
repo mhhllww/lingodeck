@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <circle cx="8" cy="8" r="8" fill="#000000"/>
+  <!-- Simplified open book icon -->
+  <path d="M4 5.5C4 5 5 4.5 6.5 4.5 7.5 4.5 8 5 8 5V11.5C8 11.5 7.5 11 6.5 11 5 11 4 11.5 4 11.5Z" fill="none" stroke="#7c4dff" stroke-width="1" stroke-linejoin="round"/>
+  <path d="M12 5.5C12 5 11 4.5 9.5 4.5 8.5 4.5 8 5 8 5V11.5C8 11.5 8.5 11 9.5 11 11 11 12 11.5 12 11.5Z" fill="none" stroke="#7c4dff" stroke-width="1" stroke-linejoin="round"/>
+</svg>

@@ -9,6 +9,9 @@ import { ShellLayout } from '@/components/layout/ShellLayout';
 export const metadata: Metadata = {
   title: 'LingoDeck — Personal Vocabulary Notebook',
   description: 'A smart notebook for building your vocabulary. Search, explore, and save words with translations, definitions, and examples.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
