@@ -19,7 +19,7 @@ func NewWordRepo(db *pgxpool.Pool) *WordRepo {
 func (r *WordRepo) Search(ctx context.Context, query string) ([]domain.Word, error) {
 	rows, err := r.db.Query(ctx,
 		`SELECT id, word, transcription, part_of_speech, definitions, examples, synonyms, tags, created_at
-		 FROM words WHERE word ILIKE $1 ORDER BY word LIMIT 20`, "%"+query+"%")
+		 FROM words WHERE LOWER(word) = LOWER($1) LIMIT 1`, query)
 	if err != nil {
 		return nil, err
 	}
