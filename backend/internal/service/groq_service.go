@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -26,15 +24,10 @@ type GroqService struct {
 }
 
 func NewGroqService(apiKey string) *GroqService {
-	proxyURL, _ := url.Parse(os.Getenv("HTTPS_PROXY"))
-	transport := &http.Transport{
-		Proxy: http.ProxyURL(proxyURL),
-	}
 	return &GroqService{
 		apiKey: apiKey,
 		client: &http.Client{
-			Timeout:   10 * time.Second,
-			Transport: transport,
+			Timeout: 10 * time.Second,
 		},
 	}
 }
