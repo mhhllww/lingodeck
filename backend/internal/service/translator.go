@@ -9,6 +9,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -28,11 +30,19 @@ type translatorService struct {
 }
 
 func NewTranslatorService(repo domain.TranslationRepository, groqAPIKey string) TranslatorService {
+	transport := &http.Transport{
+		DisableKeepAlives: true,
+	}
+	if proxyAddr := os.Getenv("HTTPS_PROXY"); proxyAddr != "" {
+		proxyURL, _ := url.Parse(proxyAddr)
+		transport.Proxy = http.ProxyURL(proxyURL)
+	}
 	return &translatorService{
 		repo:    repo,
 		groqKey: groqAPIKey,
 		httpClient: &http.Client{
-			Timeout: 15 * time.Second,
+			Timeout:   15 * time.Second,
+			Transport: transport,
 		},
 	}
 }

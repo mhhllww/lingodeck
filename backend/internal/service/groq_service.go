@@ -26,10 +26,12 @@ type GroqService struct {
 }
 
 func NewGroqService(apiKey string) *GroqService {
-	var transport http.RoundTripper
+	transport := &http.Transport{
+		DisableKeepAlives: true,
+	}
 	if proxyAddr := os.Getenv("HTTPS_PROXY"); proxyAddr != "" {
 		proxyURL, _ := url.Parse(proxyAddr)
-		transport = &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+		transport.Proxy = http.ProxyURL(proxyURL)
 	}
 	return &GroqService{
 		apiKey: apiKey,
