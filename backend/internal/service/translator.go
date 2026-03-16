@@ -51,7 +51,13 @@ var (
 	ErrTranslationFailed = errors.New("translation failed")
 )
 
-const translatePrompt = `Translate the following text from %s to %s. Return ONLY the translated text, nothing else. No quotes, no explanation, no extra formatting.
+const translatePrompt = `Translate the following text from %s to %s.
+
+STRICT RULES:
+- Return ONLY the translated text, nothing else
+- No quotes, no explanation, no extra formatting, no commentary
+- If you cannot translate the text (gibberish, typos, unknown words in any script/language), return the ORIGINAL text exactly as-is
+- NEVER say "No translation available" or anything similar — just return the original text unchanged
 
 Text: %s`
 
