@@ -180,6 +180,24 @@ func (s *GroqService) GenerateWordOfTheDay(ctx context.Context, exclude []string
 	return word, nil
 }
 
+var junkPhrases = []string{
+	"no translation", "nonsensical", "not a word", "not recognized",
+	"does not exist", "not an english word", "not a real", "no meaningful",
+	"not a valid", "gibberish", "no definition",
+}
+
+func isJunkDefinition(defs []string) bool {
+	for _, d := range defs {
+		lower := strings.ToLower(d)
+		for _, phrase := range junkPhrases {
+			if strings.Contains(lower, phrase) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *GroqService) EnrichWord(ctx context.Context, word string) (*domain.Word, error) {
 	reqBody := groqRequest{
 		Model: groqModel,
@@ -231,7 +249,7 @@ func (s *GroqService) EnrichWord(ctx context.Context, word string) (*domain.Word
 		return nil, fmt.Errorf("parsing Groq word data: %w", err)
 	}
 
-	if !result.Valid {
+	if !result.Valid || isJunkDefinition(result.Definitions) {
 		return nil, domain.ErrNotFound
 	}
 
