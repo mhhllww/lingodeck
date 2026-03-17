@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/toast';
-import { GoogleButton } from './GoogleButton';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -110,14 +109,6 @@ export function LoginForm() {
         {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
         Sign in
       </Button>
-
-      <div className="relative my-2 flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
-        <span className="flex-1 border-t border-[var(--border)]" />
-        or
-        <span className="flex-1 border-t border-[var(--border)]" />
-      </div>
-
-      <GoogleButton />
 
     </form>
   );
