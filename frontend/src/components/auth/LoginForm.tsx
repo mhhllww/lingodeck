@@ -119,12 +119,6 @@ export function LoginForm() {
 
       <GoogleButton />
 
-      <p className="text-center text-sm text-[var(--muted-foreground)]">
-        No account?{' '}
-        <Link href="/register" className="text-[var(--accent)] hover:underline">
-          Sign up
-        </Link>
-      </p>
     </form>
   );
 }
