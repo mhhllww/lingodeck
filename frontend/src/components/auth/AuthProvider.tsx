@@ -23,7 +23,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await refreshApi();
           const user = await getMeApi();
           setUser(user);
-        } catch {
+        } catch (err) {
+          // Don't redirect on network errors (e.g. server restarting after deploy)
+          if (err instanceof TypeError) return;
           setUser(null);
           const isProtected = PROTECTED_PATHS.some((p) =>
             p === '/' ? pathname === '/' : pathname.startsWith(p)
